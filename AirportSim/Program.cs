@@ -3,13 +3,6 @@ using System.Text;
 
 namespace AirportSim;
 
-/// <summary>
-/// Точка входу. Приклади:
-///   dotnet run -c Release -- run --m 6 --tmod 525600 --seed 1
-///   dotnet run -c Release -- run --m 2 --tmod 300 --trace 60
-///   dotnet run -c Release -- verify
-///   dotnet run -c Release -- series --tag main --reps 30 --twarm 3000 --tstat 525600
-/// </summary>
 public static class Program
 {
     public static int Main(string[] args)

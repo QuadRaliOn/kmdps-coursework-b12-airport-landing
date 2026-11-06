@@ -1,25 +1,24 @@
 namespace AirportSim;
 
-/// <summary>Накопичувані показники СМО посадкових смуг (обнуляються після перехідного періоду).</summary>
 public sealed class RunwayStatistics
 {
-    public long LandedNoWait;        // N_0 — посадки без очікування
-    public long LandedAfterWait;     // N_w — посадки після очікування
-    public long Enqueued;            // кількість літаків, що стали в чергу
-    public long Refuels;             // N_r — кількість дозаправок
-    public long Diverted;            // N_d — відльоти в інший аеропорт
-    public long DivertedRefueled;    // з них були дозаправлені
-    public long Released;            // кількість звільнень смуг
-    public double Income;            // Σ прибутку від посадок, грн
-    public double RefuelCost;        // Σ витрат на дозаправку, грн
-    public double QueueArea;         // Σ L(t)·Δt
-    public double BusyArea;          // Σ B(t)·Δt
-    public double WaitSumLanded;     // Σ w для літаків, що сіли після очікування
-    public double MaxWaitLanded;     // max w серед літаків, що сіли
-    public long QueueExits;          // виходи з черги (посадка або відхід)
-    public double QueueTimeSum;      // Σ часу перебування в черзі для QueueExits
-    public int MaxQueue;             // L_max
-    public double RefuelTimingError; // max |t − (a + θ)| у момент дозаправки (контроль коректності)
+    public long LandedNoWait;
+    public long LandedAfterWait;
+    public long Enqueued;
+    public long Refuels;
+    public long Diverted;
+    public long DivertedRefueled;
+    public long Released;
+    public double Income;
+    public double RefuelCost;
+    public double QueueArea;
+    public double BusyArea;
+    public double WaitSumLanded;
+    public double MaxWaitLanded;
+    public long QueueExits;
+    public double QueueTimeSum;
+    public int MaxQueue;
+    public double RefuelTimingError;
 
     public void Reset() => this.CopyFrom(new RunwayStatistics());
 
@@ -34,21 +33,13 @@ public sealed class RunwayStatistics
     }
 }
 
-/// <summary>
-/// СМО «посадкові смуги»: m ідентичних пристроїв D1…Dm (t = 35 хв) зі спільною чергою (max = ∞, FIFO).
-/// Розширення формалізму для B12:
-///  • зміна типу запиту в черзі: при w = θ (θ = unif(70, 10)) літак дозаправляється, витрати c = unif(1000, 200);
-///  • маршрут «відхід» із черги з блокуванням B(S, t) = [t − a &lt; 140]: при w = 140 літак іде в інший аеропорт;
-///  • тип запиту визначає прибуток: без очікування 2000 грн, з очікуванням unif(1500, 100) грн.
-/// Пріоритет одночасних подій: звільнення смуги → дозаправка → відхід; надходження обробляє Create після них.
-/// </summary>
 public sealed class Runways : Element
 {
     private readonly ModelParameters p;
     private readonly FunRand service;
-    private readonly double[] channelTnext;     // t_r — момент звільнення r-ї смуги
-    private readonly Plane?[] channelPlane;     // K_r — літак на r-й смузі (null — смуга вільна)
-    private readonly LinkedList<Plane> queue = new();   // черга очікування посадки, FIFO
+    private readonly double[] channelTnext;
+    private readonly Plane?[] channelPlane;
+    private readonly LinkedList<Plane> queue = new();
     private double nextRefuel = double.PositiveInfinity;
     private double nextLeave = double.PositiveInfinity;
 
@@ -68,7 +59,6 @@ public sealed class Runways : Element
     public int QueueLength => queue.Count;
     public int Busy { get; private set; }
 
-    /// <summary>Подія «надходження літака в СМО».</summary>
     public override void InAct(Plane plane)
     {
         int r = Array.IndexOf(channelPlane, null);
@@ -78,7 +68,7 @@ public sealed class Runways : Element
         }
         else
         {
-            queue.AddLast(plane);           // max = ∞, відмов немає
+            queue.AddLast(plane);
             Stats.Enqueued++;
             if (queue.Count > Stats.MaxQueue) Stats.MaxQueue = queue.Count;
             Log?.Event(Tcurr, "надходження → черга", plane, this);
@@ -86,10 +76,8 @@ public sealed class Runways : Element
         UpdateTnext();
     }
 
-    /// <summary>Обробка всіх подій СМО з моментом t = Tcurr у порядку пріоритету.</summary>
     public override void OutAct()
     {
-        // 1) завершення зайнятості смуг: смуга вільна, перший літак із черги сідає
         for (int r = 0; r < channelTnext.Length; r++)
         {
             if (channelTnext[r] > Tcurr) continue;
@@ -101,7 +89,6 @@ public sealed class Runways : Element
             }
         }
 
-        // 2) дозаправка літаків, у яких очікування досягло порогу θ
         if (p.RefuelEnabled && nextRefuel <= Tcurr)
         {
             foreach (Plane plane in queue)
@@ -109,7 +96,6 @@ public sealed class Runways : Element
                     Refuel(plane);
         }
 
-        // 3) відхід в інший аеропорт: маршрут із черги відкривається, коли w = w_max
         if (nextLeave <= Tcurr)
         {
             LinkedListNode<Plane>? node = queue.First;
@@ -189,7 +175,6 @@ public sealed class Runways : Element
         DivertedExit?.InAct(plane);
     }
 
-    /// <summary>Tnext = min(t_1…t_m, найближча дозаправка, найближчий відхід).</summary>
     private void UpdateTnext()
     {
         double tChannel = double.PositiveInfinity;

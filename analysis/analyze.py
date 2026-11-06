@@ -1,9 +1,3 @@
-"""Статистична обробка результатів імітації (розділ 4 записки) і побудова графіків.
-
-Запуск із кореня репозиторію:  py -3 analysis/analyze.py
-Вхід:  results/*.csv, results/verification.json
-Вихід: results/summary.json, figures/*.png
-"""
 import json
 import sys
 from pathlib import Path
@@ -38,21 +32,17 @@ plt.rcParams.update({
 })
 COLORS = ["#1f4e79", "#c0504d", "#4f8a3a", "#8064a2", "#e08a1e", "#2a9d8f", "#6b6b6b"]
 
-
 def save(fig, name):
     fig.tight_layout()
     fig.savefig(FIG / name, bbox_inches="tight")
     plt.close(fig)
-
 
 def ci_half(x, beta=BETA):
     x = np.asarray(x, float)
     n = len(x)
     return stats.t.ppf((1 + beta) / 2, n - 1) * x.std(ddof=1) / np.sqrt(n)
 
-
 def payback_table(df):
-    """Δp_r(k) = p_r(2+k) − p_r(2) для кожної реплікації r (загальні випадкові числа) і T_r(k) = 3·10⁶·k / Δp_r(k)."""
     piv = df.pivot(index="seed", columns="k", values="annualProfit")
     rows = []
     for k in sorted(piv.columns):
@@ -62,14 +52,13 @@ def payback_table(df):
         if k > 0:
             dp = piv[k] - piv[0]
             T = RUNWAY_COST * k / dp
-            Ttot = RUNWAY_COST * k / piv[k]          # альтернативне тлумачення: повний прибуток
+            Ttot = RUNWAY_COST * k / piv[k]
             row.update({"dp_mean": dp.mean(), "dp_sd": dp.std(ddof=1), "dp_ci": ci_half(dp),
                         "T_mean": T.mean(), "T_sd": T.std(ddof=1), "T_ci": ci_half(T),
                         "T_ratio": RUNWAY_COST * k / dp.mean(),
                         "Ttot": RUNWAY_COST * k / p.mean() if p.mean() > 0 else None})
         rows.append(row)
     return pd.DataFrame(rows), piv
-
 
 def series_indicators(df):
     g = df.groupby("m")
@@ -83,10 +72,8 @@ def series_indicators(df):
                 events=("events", "mean")).reset_index()
     return out
 
-
 summary = {}
 
-# ---------------------------------------------------------------- 1. перехідний період (метод Велча)
 welch = pd.read_csv(RES / "transient_welch.csv")
 n_welch = welch.seed.nunique()
 fig, ax = plt.subplots(figsize=(7.2, 4.2))
@@ -95,8 +82,6 @@ for i, (m, g) in enumerate(welch.groupby("m")):
     e = g.groupby("checkpoint").queueNow.mean()
     ma = e.rolling(11, center=True, min_periods=1).mean()
     steady = e[e.index >= 10000].mean()
-    # середні за блоками по 500 хв. Модель стартує з порожньої системи, тож черга в середньому зростає;
-    # перехідний період закінчується на початку першого блоку, середнє якого досягло 90 % сталого рівня
     blocks = e.groupby((e.index - 1) // 500).mean()
     band = 0.10 * steady
     t_w = next((int((b + 1) * 500) for b in blocks.index if blocks[b] >= steady - band), None)
@@ -112,7 +97,6 @@ ax.legend(loc="center right")
 save(fig, "fig_4_1_warmup.png")
 summary["warmup"] = {"replications": int(n_welch), "by_m": warm, "chosen": 3000}
 
-# ---------------------------------------------------------------- 2. тривалість прогону, умова (3.1)
 cum = pd.read_csv(RES / "transient_cum.csv")
 cum["p"] = (cum.income - cum.refuelCost) / cum.t * YEAR / 1e6
 cum["q"] = cum.queueArea / cum.t
@@ -141,7 +125,6 @@ axes[0].set_ylabel("Накопичене середнє p(t), млн грн/рі
 axes[0].legend(fontsize=9, loc="lower right")
 save(fig, "fig_4_2_cumulative.png")
 
-# ---------------------------------------------------------------- 3. пробна серія та кількість прогонів
 pilot = pd.read_csv(RES / "series_pilot.csv")
 pt, _ = payback_table(pilot)
 eps_T = 0.0005
@@ -155,7 +138,6 @@ for _, r in pt.iterrows():
 summary["pilot"] = {"n0": int(pilot.seed.nunique()), "eps_T": eps_T, "eps_p": eps_p, "rows": need,
                     "n_T_max": max(x.get("n_T", 0) for x in need), "n_p_max": max(x["n_p"] for x in need)}
 
-# ---------------------------------------------------------------- 4. основна серія: повний перебір k = 0…10
 main = pd.read_csv(RES / "series_main.csv")
 mt, mpiv = payback_table(main)
 ind = series_indicators(main)
@@ -166,7 +148,6 @@ summary["main"]["best_k"] = int(best.k)
 summary["main"]["best_T_years"] = best.T_mean
 summary["main"]["best_T_days"] = best.T_mean * 365
 
-# парні t-тести k* проти сусідів (одні й ті самі реплікації)
 Tmat = {int(k): RUNWAY_COST * k / (mpiv[k] - mpiv[0]) for k in mpiv.columns if k > 0}
 kstar = int(best.k)
 pairs = []
@@ -180,10 +161,9 @@ for k2 in sorted(Tmat):
                   "share_reps_better": float((d > 0).mean())})
 summary["main"]["paired"] = pairs
 
-# дисперсійний аналіз: фактор k (q = 10 рівнів), відгук T(k)
 q = len(Tmat)
 n = len(next(iter(Tmat.values())))
-Y = np.array([Tmat[k].values for k in sorted(Tmat)])          # q × n
+Y = np.array([Tmat[k].values for k in sorted(Tmat)])
 ybar_j = Y.mean(axis=1)
 ybar = Y.mean()
 SS_f = n * ((ybar_j - ybar) ** 2).sum()
@@ -192,12 +172,10 @@ D_f = SS_f / (q - 1)
 D_r = SS_r / (q * (n - 1))
 F = D_f / D_r
 F_crit = stats.f.ppf(0.95, q - 1, q * (n - 1))
-# критерій Кохрена однорідності дисперсій
 s2 = Y.var(axis=1, ddof=1)
 G = s2.max() / s2.sum()
 f1, f2 = n - 1, q
 G_crit = 1 / (1 + (f2 - 1) / stats.f.ppf(1 - 0.05 / f2, f1, (f2 - 1) * f1))
-# дисперсійний аналіз лише для околу оптимуму k = 4…6
 Yn = np.array([Tmat[k].values for k in (4, 5, 6)])
 yj = Yn.mean(axis=1)
 SSf_n = n * ((yj - Yn.mean()) ** 2).sum()
@@ -210,7 +188,6 @@ summary["main"]["anova"] = {"q": q, "n": n, "SS_f": SS_f, "SS_r": SS_r, "D_f": D
                                      "D_f": SSf_n / 2, "D_r": SSr_n / (3 * (n - 1))}}
 summary["main"]["kruskal"] = dict(zip(("H", "p_value"), stats.kruskal(*[Tmat[k].values for k in sorted(Tmat)])))
 
-# ---------- графік p(m)
 fig, ax = plt.subplots(figsize=(7.0, 4.0))
 ax.errorbar(mt.m, mt.p_mean / 1e6, yerr=mt.p_ci / 1e6, fmt="o-", color=COLORS[0], capsize=3, lw=1.5)
 ax.axhline(0, color="k", lw=0.8)
@@ -219,7 +196,6 @@ ax.set_ylabel("Річний прибуток p(m), млн грн/рік")
 ax.set_xticks(range(2, 13))
 save(fig, "fig_4_3_profit.png")
 
-# ---------- графік T(k)
 tk = mt[mt.k > 0]
 fig, ax = plt.subplots(figsize=(7.0, 4.2))
 ax.errorbar(tk.k, tk.T_mean * 365, yerr=tk.T_ci * 365, fmt="o-", color=COLORS[1], capsize=3, lw=1.5)
@@ -234,7 +210,6 @@ sec = ax.secondary_yaxis("right", functions=(lambda d: d / 365, lambda y: y * 36
 sec.set_ylabel("Час окупності T(k), років")
 save(fig, "fig_4_4_payback.png")
 
-# ---------- показники обслуговування
 fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.6))
 ax = axes[0]
 ax.plot(ind.m, ind.shareDiverted * 100, "o-", color=COLORS[1], label="відлетіли в інший аеропорт")
@@ -257,7 +232,6 @@ ax2.grid(False)
 ax.legend(l1 + l2, [l.get_label() for l in l1 + l2], fontsize=9, loc="upper right")
 save(fig, "fig_4_5_service.png")
 
-# ---------- розподіл T_r(k) біля оптимуму
 fig, ax = plt.subplots(figsize=(6.6, 3.8))
 data = [Tmat[k].values * 365 for k in (3, 4, 5, 6, 7)]
 ax.boxplot(data, tick_labels=["3", "4", "5", "6", "7"], widths=0.5)
@@ -265,7 +239,6 @@ ax.set_xlabel("Кількість додаткових смуг k, шт.")
 ax.set_ylabel("Час окупності в реплікації T$_l$(k), діб")
 save(fig, "fig_4_6_boxplot.png")
 
-# ---------------------------------------------------------------- 5. чутливість і пропозиції
 scen = {}
 fig, ax = plt.subplots(figsize=(7.0, 4.2))
 labels = {"lambda8": "λ = 8 літаків/год", "main": "λ = 10 літаків/год (умова)", "lambda12": "λ = 12 літаків/год",
@@ -288,7 +261,6 @@ ax.legend(fontsize=9.5)
 save(fig, "fig_5_1_sensitivity.png")
 summary["scenarios"] = scen
 
-# ---------------------------------------------------------------- 6. верифікація
 ver = json.loads((RES / "verification.json").read_text(encoding="utf-8"))
 summary["verification"] = ver
 fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.5))
@@ -317,7 +289,6 @@ ax.set_title("M/M/m+M")
 ax.legend(fontsize=9)
 save(fig, "fig_3_4_verification.png")
 
-
 def clean(o):
     if isinstance(o, dict):
         return {str(k): clean(v) for k, v in o.items()}
@@ -331,10 +302,8 @@ def clean(o):
         return None
     return o
 
-
 (RES / "summary.json").write_text(json.dumps(clean(summary), ensure_ascii=False, indent=1), encoding="utf-8")
 
-# короткий звіт у консоль
 print("Перехідний період:", {m: v["t_warm"] for m, v in warm.items()})
 print("Збіжність (ε = 1 млн):", {m: v["1.0"] for m, v in conv.items()})
 print("Пілот: n_T_max = %.1f, n_p_max = %.1f" % (summary["pilot"]["n_T_max"], summary["pilot"]["n_p_max"]))

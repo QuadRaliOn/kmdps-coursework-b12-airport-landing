@@ -6,7 +6,6 @@ using System.Text.Json.Serialization;
 
 namespace AirportSim;
 
-/// <summary>Верифікація моделі та експериментальне дослідження (розділи 3.4 і 4 записки).</summary>
 public static class Experiments
 {
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
@@ -22,16 +21,13 @@ public static class Experiments
     public static SimulationResult Run(ModelParameters p, int seed, double tmod, double twarm = 0.0, EventLog? log = null)
         => new Model(p, seed, log).Simulate(tmod, twarm);
 
-    /// <summary>Незалежні прогони з різними зернами (паралельно, результат не залежить від порядку).</summary>
     public static SimulationResult[] Replicate(ModelParameters p, IEnumerable<int> seeds, double tmod, double twarm)
         => seeds.AsParallel().AsOrdered().Select(s => Run(p, s, tmod, twarm)).ToArray();
 
-    // ------------------------------------------------------------------ протокол подій
     public static void Trace(string outDir)
     {
         Directory.CreateDirectory(outDir);
 
-        // 1) модель за умовою завдання, m = 2, перші 300 хв
         using (var w = new StreamWriter(Path.Combine(outDir, "trace_random_m2.txt"), false, new UTF8Encoding(false)))
         {
             var p = new ModelParameters { Runways = 2 };
@@ -42,7 +38,6 @@ public static class Experiments
                         $"дозаправок {r.Refuels}, відльотів {r.Diverted}, у черзі наприкінці {r.QueueAtEnd}.");
         }
 
-        // 2) детермінований варіант для ручної перевірки
         using (var w = new StreamWriter(Path.Combine(outDir, "trace_deterministic_m2.txt"), false, new UTF8Encoding(false)))
         {
             var p = DeterministicCheckParameters();
@@ -55,7 +50,6 @@ public static class Experiments
         }
     }
 
-    /// <summary>Інтервал 6 хв, θ = 70, c = 1000, r = 1500 — усі моменти подій рахуються вручну.</summary>
     public static ModelParameters DeterministicCheckParameters() => new()
     {
         Runways = 2,
@@ -65,14 +59,12 @@ public static class Experiments
         ProfitWaitDev = 0.0
     };
 
-    // ------------------------------------------------------------------ верифікація
     public static void Verify(string outDir)
     {
         Directory.CreateDirectory(outDir);
         const double lambda = 1.0 / 6.0, mu = 1.0 / 35.0;
         var report = new Dictionary<string, object>();
 
-        // V1: M/M/m без відходу і дозаправки — порівняння з формулою Ерланга C
         var v1 = new List<object>();
         foreach (int m in new[] { 6, 7, 8, 10 })
         {
@@ -94,7 +86,6 @@ public static class Experiments
         }
         report["mmm_erlangC"] = v1;
 
-        // V2: M/M/m+M — експоненціальне терпіння із середнім 140 хв (модель Ерланга A)
         var v2 = new List<object>();
         foreach (int m in new[] { 2, 4, 6, 8 })
         {
@@ -108,7 +99,6 @@ public static class Experiments
         }
         report["mmm_erlangA"] = v2;
 
-        // V3: модель за умовою завдання при різних значеннях вхідних змінних (Tmod = 1 рік, зерно 1)
         var cases = new List<(string label, ModelParameters p)>
         {
             ("базовий: m = 2", new ModelParameters()),
@@ -131,7 +121,7 @@ public static class Experiments
         foreach (var (label, p) in cases)
         {
             var r = Run(p, 1, ModelParameters.MinutesPerYear, 0.0);
-            long balance = r.Arrivals - r.Landed - r.Diverted - r.QueueAtEnd;   // має бути 0
+            long balance = r.Arrivals - r.Landed - r.Diverted - r.QueueAtEnd;
             v3.Add(new
             {
                 label,
@@ -144,7 +134,6 @@ public static class Experiments
         }
         report["table"] = v3;
 
-        // V4: детермінований прогін для ручної перевірки протоколу
         var det = Run(DeterministicCheckParameters(), 1, 420.0);
         report["deterministic"] = det;
 
@@ -170,8 +159,6 @@ public static class Experiments
         Console.WriteLine(JsonSerializer.Serialize(new { v1, v2 }, JsonOptions));
     }
 
-    // ------------------------------------------------------------------ перехідний період
-    /// <summary>Знімки накопичених величин кожні step хв для кількох прогонів (умова (3.1) методички).</summary>
     public static void Transient(string outDir, string tag, int[] runwayCounts, int seeds, double tmax, double step)
     {
         Directory.CreateDirectory(outDir);
@@ -201,11 +188,6 @@ public static class Experiments
         foreach (var r in rows.OrderBy(r => r.m).ThenBy(r => r.seed)) w.Write(r.line);
     }
 
-    // ------------------------------------------------------------------ серія експериментів
-    /// <summary>
-    /// Повний перебір k = kmin…kmax додаткових смуг, reps реплікацій на кожне k.
-    /// Реплікація r використовує зерно seedBase + r для всіх k (загальні випадкові числа).
-    /// </summary>
     public static List<SimulationResult> Series(string outDir, string tag, ModelParameters baseParams, int reps,
                                                 int seedBase, double twarm, double tstat, int kmin = 0, int kmax = 10)
     {
@@ -235,7 +217,6 @@ public static class Experiments
         return results;
     }
 
-    /// <summary>Таблиця T(k) = S(k) / Δp(k) у консоль (Δp — приріст річного прибутку відносно m = 2).</summary>
     public static void PrintPayback(List<SimulationResult> results, string tag)
     {
         var bySeed = results.GroupBy(r => r.Seed).ToDictionary(g => g.Key, g => g.ToDictionary(r => r.Runways));

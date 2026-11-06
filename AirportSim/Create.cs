@@ -1,9 +1,5 @@
 namespace AirportSim;
 
-/// <summary>
-/// Елемент «надходження запитів ззовні» C: t = exp(6) хв.
-/// У момент надходження літак отримує всі випадкові атрибути (θ, c, r, w_max).
-/// </summary>
 public sealed class Create : Element
 {
     private readonly ModelParameters p;
@@ -16,17 +12,16 @@ public sealed class Create : Element
         this.p = p;
         arrivals = streams.Arrivals;
         attributes = streams.Attributes;
-        Tnext = arrivals.Sample(p.InterarrivalDist, p.MeanInterarrival);   // перше надходження
+        Tnext = arrivals.Sample(p.InterarrivalDist, p.MeanInterarrival);
     }
 
-    /// <summary>Наступний елемент маршруту (СМО посадкових смуг).</summary>
     public Element? Next { get; set; }
 
     public override void OutAct()
     {
         Quantity++;
         Plane plane = NewPlane();
-        Tnext = Tcurr + arrivals.Sample(p.InterarrivalDist, p.MeanInterarrival);   // t0 := t + g0
+        Tnext = Tcurr + arrivals.Sample(p.InterarrivalDist, p.MeanInterarrival);
         Next?.InAct(plane);
     }
 

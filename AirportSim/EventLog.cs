@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace AirportSim;
 
-/// <summary>Протокол подій: один рядок на кожну зміну стану моделі.</summary>
 public sealed class EventLog
 {
     private readonly TextWriter writer;
