@@ -262,7 +262,7 @@ fig, ax = plt.subplots(figsize=(6.6, 3.8))
 data = [Tmat[k].values * 365 for k in (3, 4, 5, 6, 7)]
 ax.boxplot(data, tick_labels=["3", "4", "5", "6", "7"], widths=0.5)
 ax.set_xlabel("Кількість додаткових смуг k, шт.")
-ax.set_ylabel("Час окупності в реплікації T$_r$(k), діб")
+ax.set_ylabel("Час окупності в реплікації T$_l$(k), діб")
 save(fig, "fig_4_6_boxplot.png")
 
 # ---------------------------------------------------------------- 5. чутливість і пропозиції
