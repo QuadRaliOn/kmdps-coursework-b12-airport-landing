@@ -74,28 +74,48 @@ def series_indicators(df):
 
 summary = {}
 
-welch = pd.read_csv(RES / "transient_welch.csv")
-n_welch = welch.seed.nunique()
+welch = pd.read_csv(RES / "transient_welch.csv", usecols=["m", "seed", "checkpoint", "queueNow"])
+welch6 = pd.read_csv(RES / "transient_welch6.csv", usecols=["m", "seed", "checkpoint", "queueNow"])
+WIN = 10                      # півширина вікна ковзного середнього, точок по 50 хв (вікно 1050 хв)
+
+
+def welch_end(e, steady_from):
+    """Метод Велча: усереднення за прогонами, ковзне середнє; кінець перехідного періоду —
+    перший момент, коли ковзне середнє входить у смугу steady ± max(5 %, 2σ шуму усередненої кривої)."""
+    v = e.values
+    sm = np.empty_like(v, dtype=float)
+    for i in range(len(v)):             # ковзне середнє Велча: на початку вікно 2i − 1, далі 2w + 1
+        h = min(i, WIN, len(v) - 1 - i)
+        sm[i] = v[i - h:i + h + 1].mean()
+    ma = pd.Series(sm, index=e.index)
+    tail = e[e.index >= steady_from]
+    steady, noise = tail.mean(), tail.std()
+    band = max(0.05 * steady, 2 * noise)
+    ok = (ma - steady).abs() <= band
+    t_w = next((int(t) for t in ma.index if ok[t]), None)
+    return ma, steady, noise, band, t_w
+
+
 fig, ax = plt.subplots(figsize=(7.2, 4.2))
 warm = {}
-for i, (m, g) in enumerate(welch.groupby("m")):
+curves = {int(m): (g, 10000, int(g.seed.nunique()), 20000) for m, g in welch.groupby("m") if m != 6}
+curves[6] = (welch6, 20000, int(welch6.seed.nunique()), int(welch6.checkpoint.max()))
+for i, m in enumerate(sorted(curves)):
+    g, steady_from, reps, tmax = curves[m]
     e = g.groupby("checkpoint").queueNow.mean()
-    ma = e.rolling(11, center=True, min_periods=1).mean()
-    steady = e[e.index >= 10000].mean()
-    blocks = e.groupby((e.index - 1) // 500).mean()
-    band = 0.10 * steady
-    t_w = next((int((b + 1) * 500) for b in blocks.index if blocks[b] >= steady - band), None)
-    warm[int(m)] = {"steady": steady, "band": band, "t_warm": t_w}
-    if m in (2, 5, 6, 7):
-        ax.plot(ma.index, ma.values, color=COLORS[i % len(COLORS)], lw=1.4, label=f"m = {m}")
+    ma, steady, noise, band, t_w = welch_end(e, steady_from)
+    warm[m] = {"steady": steady, "noise": noise, "band": band, "t_warm": t_w, "reps": reps, "tmax": tmax,
+               "steady_from": steady_from}
+    sel = ma[ma.index <= 20000]
+    ax.plot(sel.index, sel.values, color=COLORS[i % len(COLORS)], lw=1.3, label=f"m = {m}")
 ax.axvline(3000, color="k", ls="--", lw=1)
-ax.text(3200, 13.5, "T$_{warm}$ = 3000 хв", fontsize=11)
+ax.text(3200, 14.5, "T$_{warm}$ = 3000 хв", fontsize=12)
 ax.set_xlim(0, 20000)
 ax.set_xlabel("Модельний час t, хв")
 ax.set_ylabel("Середня за прогонами довжина черги, літаків")
-ax.legend(loc="center right")
+ax.legend(loc="center right", ncol=2)
 save(fig, "fig_4_1_warmup.png")
-summary["warmup"] = {"replications": int(n_welch), "by_m": warm, "chosen": 3000}
+summary["warmup"] = {"replications": int(welch.seed.nunique()), "window": 2 * WIN + 1, "by_m": warm, "chosen": 3000}
 
 cum = pd.read_csv(RES / "transient_cum.csv")
 cum["p"] = (cum.income - cum.refuelCost) / cum.t * YEAR / 1e6
@@ -111,6 +131,17 @@ for m, g in cum.groupby("m"):
     conv[int(m)]["range_end"] = float(rng.iloc[-1])
     conv[int(m)]["p_end_mean"] = float(piv.iloc[-1].mean())
 summary["runlength"] = conv
+
+cum6 = pd.read_csv(RES / "transient_cum6.csv")
+cum6["p"] = (cum6.income - cum6.refuelCost) / cum6.t * YEAR / 1e6
+piv6 = cum6.pivot(index="checkpoint", columns="seed", values="p")
+rng6 = piv6.max(axis=1) - piv6.min(axis=1)
+long6 = {"tmax": int(piv6.index.max()), "seeds": int(piv6.shape[1])}
+for eps in (5.0, 2.0, 1.0):
+    ok = rng6 <= eps
+    long6[str(eps)] = next((int(t) for t in rng6.index if ok[ok.index >= t].all()), None)
+long6["range_by_year"] = {y: float(rng6[rng6.index <= y * YEAR].iloc[-1]) for y in range(1, 6)}
+summary["runlength_m6_long"] = long6
 
 fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.6), sharex=True)
 for ax, m in zip(axes, (7, 6)):
@@ -187,6 +218,87 @@ summary["main"]["anova"] = {"q": q, "n": n, "SS_f": SS_f, "SS_r": SS_r, "D_f": D
                             "near": {"F": F_n, "F_crit": stats.f.ppf(0.95, 2, 3 * (n - 1)),
                                      "D_f": SSf_n / 2, "D_r": SSr_n / (3 * (n - 1))}}
 summary["main"]["kruskal"] = dict(zip(("H", "p_value"), stats.kruskal(*[Tmat[k].values for k in sorted(Tmat)])))
+
+
+def cochran(arrs, alpha=0.05):
+    s2_ = np.array([np.var(a, ddof=1) for a in arrs])
+    q_, n_ = len(arrs), len(arrs[0])
+    g = s2_.max() / s2_.sum()
+    g_crit = 1 / (1 + (q_ - 1) / stats.f.ppf(1 - alpha / q_, n_ - 1, (q_ - 1) * (n_ - 1)))
+    return float(g), float(g_crit)
+
+
+def anova(arrs):
+    Y_ = np.array(arrs)
+    q_, n_ = Y_.shape
+    yj_ = Y_.mean(axis=1)
+    d_f = n_ * ((yj_ - Y_.mean()) ** 2).sum() / (q_ - 1)
+    d_r = ((Y_ - yj_[:, None]) ** 2).sum() / (q_ * (n_ - 1))
+    return {"q": q_, "df1": q_ - 1, "df2": q_ * (n_ - 1), "D_f": d_f, "D_r": d_r, "F": d_f / d_r,
+            "F_crit": stats.f.ppf(0.95, q_ - 1, q_ * (n_ - 1))}
+
+
+STABLE = list(range(5, 11))
+lnT = [np.log(Tmat[k].values) for k in STABLE]
+g_ln, gc_ln = cochran(lnT)
+g_raw_st, gc_raw_st = cochran([Tmat[k].values for k in STABLE])
+summary["main"]["cochran_steps"] = {
+    "all_raw": {"G": G, "G_crit": G_crit},
+    "stable_raw": {"G": g_raw_st, "G_crit": gc_raw_st},
+    "stable_ln": {"G": g_ln, "G_crit": gc_ln},
+    "cv_by_k": {int(k): float(Tmat[k].std(ddof=1) / Tmat[k].mean()) for k in sorted(Tmat)},
+}
+summary["main"]["anova_ln_stable"] = anova(lnT)
+
+
+def chi2_normal(x, alpha=0.05):
+    """Критерій χ² Пірсона: рівні інтервали за Стерджесом, об’єднання інтервалів з очікуваною частотою < 5."""
+    x = np.asarray(x, float)
+    n_ = len(x)
+    kb = int(round(1 + 3.322 * np.log10(n_)))
+    edges = np.linspace(x.min(), x.max(), kb + 1)
+    obs, _ = np.histogram(x, edges)
+    mu, sd = x.mean(), x.std(ddof=1)
+    cdf = stats.norm.cdf(edges, mu, sd)
+    cdf[0], cdf[-1] = 0.0, 1.0
+    exp_ = n_ * np.diff(cdf)
+    o, e_, co, ce = [], [], 0, 0.0
+    for a, b in zip(obs, exp_):
+        co += a
+        ce += b
+        if ce >= 5:
+            o.append(co); e_.append(ce); co, ce = 0, 0.0
+    if ce > 0:
+        o[-1] += co; e_[-1] += ce
+    o, e_ = np.array(o), np.array(e_)
+    chi = float(((o - e_) ** 2 / e_).sum())
+    dfree = len(o) - 1 - 2
+    return {"n": n_, "mean": mu, "sd": sd, "min": float(x.min()), "max": float(x.max()), "cv": sd / mu,
+            "bins": kb, "edges": edges.tolist(), "obs": obs.tolist(), "merged": int(len(o)), "chi2": chi,
+            "df": dfree, "crit": float(stats.chi2.ppf(1 - alpha, dfree)), "crit01": float(stats.chi2.ppf(0.99, dfree)),
+            "p_value": float(stats.chi2.sf(chi, dfree)), "shapiro_p": float(stats.shapiro(x).pvalue),
+            "skew": float(stats.skew(x)), "kurt": float(stats.kurtosis(x))}
+
+
+dist = {"T5_days": chi2_normal(Tmat[kstar].values * 365),
+        "p7_mln": chi2_normal(mpiv[kstar].values / 1e6)}
+summary["main"]["distribution"] = dist
+fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.6))
+for ax, key, xlabel in ((axes[0], "T5_days", f"Час окупності T$_l$({kstar}), діб"),
+                        (axes[1], "p7_mln", f"Річний прибуток p$_l$({kstar + 2}), млн грн/рік")):
+    d_ = dist[key]
+    edges = np.array(d_["edges"])
+    ax.hist(edges[:-1], bins=edges, weights=d_["obs"], color=COLORS[0], alpha=0.75, edgecolor="white",
+            label="частоти (n = %d)" % d_["n"])
+    xs = np.linspace(edges[0], edges[-1], 200)
+    width = edges[1] - edges[0]
+    ax.plot(xs, d_["n"] * width * stats.norm.pdf(xs, d_["mean"], d_["sd"]), color=COLORS[1], lw=1.6,
+            label="нормальний закон")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Частота")
+    ax.legend(fontsize=9, loc="upper left" if key == "p7_mln" else "upper right", framealpha=0.95)
+    ax.set_ylim(0, max(d_["obs"]) * 1.35)
+save(fig, "fig_4_7_hist.png")
 
 fig, ax = plt.subplots(figsize=(7.0, 4.0))
 ax.errorbar(mt.m, mt.p_mean / 1e6, yerr=mt.p_ci / 1e6, fmt="o-", color=COLORS[0], capsize=3, lw=1.5)
@@ -313,5 +425,10 @@ for p_ in pairs:
     print("  k=%d: ΔT=%.6f, t=%.2f, p=%.3g, частка=%.2f" % (p_["k"], p_["diff_mean"], p_["t"], p_["p_value"], p_["share_reps_better"]))
 print("ANOVA:", {k: v for k, v in summary["main"]["anova"].items() if k != "near"}, summary["main"]["anova"]["near"])
 print("Kruskal:", summary["main"]["kruskal"])
+print("Cochran:", summary["main"]["cochran_steps"])
+print("ANOVA ln:", summary["main"]["anova_ln_stable"])
+print("Dist:", {k: {kk: v[kk] for kk in ("mean", "sd", "chi2", "df", "crit", "p_value", "shapiro_p", "obs")} for k, v in dist.items()})
+print("Warm:", {m: v["t_warm"] for m, v in warm.items()})
+print("Long m6:", long6)
 for tag, s in scen.items():
     print(tag, "k* =", s["best_k"], "T =", round(s["best_T_days"], 2), "діб")

@@ -108,6 +108,8 @@ public static class Experiments
             ("m = 6", new ModelParameters { Runways = 6 }),
             ("m = 7", new ModelParameters { Runways = 7 }),
             ("m = 12", new ModelParameters { Runways = 12 }),
+            ("m = 7, інтервал exp(5)", new ModelParameters { Runways = 7, MeanInterarrival = 5 }),
+            ("m = 7, інтервал exp(7,5)", new ModelParameters { Runways = 7, MeanInterarrival = 7.5 }),
             ("m = 2, інтервал exp(12)", new ModelParameters { MeanInterarrival = 12 }),
             ("m = 2, інтервал exp(30)", new ModelParameters { MeanInterarrival = 30 }),
             ("m = 2, смуга 20 хв", new ModelParameters { LandingOccupancy = 20 }),
@@ -116,6 +118,9 @@ public static class Experiments
             ("m = 6, θ = unif(100, 10)", new ModelParameters { Runways = 6, RefuelThresholdMean = 100 }),
             ("m = 6, без дозаправки", new ModelParameters { Runways = 6, RefuelEnabled = false }),
             ("m = 6, без відходу", new ModelParameters { Runways = 6, PatienceDist = Dist.None }),
+            ("m = 6, c = unif(2000, 200)", new ModelParameters { Runways = 6, RefuelCostMean = 2000 }),
+            ("m = 6, π₀ = 4000 грн", new ModelParameters { Runways = 6, ProfitNoWait = 4000 }),
+            ("m = 6, π = unif(3000, 100)", new ModelParameters { Runways = 6, ProfitWaitMean = 3000 }),
         };
         var v3 = new List<object>();
         foreach (var (label, p) in cases)
