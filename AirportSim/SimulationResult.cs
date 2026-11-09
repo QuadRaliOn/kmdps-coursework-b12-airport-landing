@@ -1,5 +1,6 @@
 namespace AirportSim;
 
+/// <summary>Вихідні характеристики одного прогону (формули підрозділу 2.3).</summary>
 public sealed record SimulationResult
 {
     public int Runways { get; init; }
@@ -29,6 +30,8 @@ public sealed record SimulationResult
     public int BusyAtEnd { get; init; }
     public double RefuelTimingError { get; init; }
     public long Events { get; init; }
+    public long QueueExits { get; init; }
+    public double WaitSumAll { get; init; }
 
     public long Landed => LandedNoWait + LandedAfterWait;
     public double NetProfit => Income - RefuelCost;
@@ -43,9 +46,15 @@ public sealed record SimulationResult
     public double ShareEnqueued => Arrivals == 0 ? 0 : (double)Enqueued / Arrivals;
     public double MeanWaitPerArrival => Arrivals == 0 ? 0 : MeanTimeInQueue * QueueExitRate * Period / Arrivals;
 
+    /// <summary>Середнє очікування за всіма літаками, що пройшли через вузол «черга – смуги»
+    /// (сіли без очікування, сіли після очікування, відійшли): Σw / (N0 + Nw + Nd).</summary>
+    public double MeanWaitAll => LandedNoWait + QueueExits == 0 ? 0 : WaitSumAll / (LandedNoWait + QueueExits);
+
     public static SimulationResult From(Model model, double tmod)
     {
-        RunwayStatistics s = model.Runways.Stats;
+        Process smo = model.Runways;
+        TimedQueue q = model.Queue;
+        QueueStatistics qs = q.Stats;
         double period = tmod - model.StatStart;
         return new SimulationResult
         {
@@ -55,26 +64,28 @@ public sealed record SimulationResult
             Twarm = model.StatStart,
             Period = period,
             Arrivals = model.Source.Quantity,
-            Enqueued = s.Enqueued,
-            LandedNoWait = s.LandedNoWait,
-            LandedAfterWait = s.LandedAfterWait,
-            Refuels = s.Refuels,
-            Diverted = s.Diverted,
-            DivertedRefueled = s.DivertedRefueled,
-            Released = s.Released,
-            Income = s.Income,
-            RefuelCost = s.RefuelCost,
-            MeanQueue = s.QueueArea / period,
-            MaxQueue = s.MaxQueue,
-            MeanBusy = s.BusyArea / period,
-            MeanWaitLanded = s.LandedAfterWait == 0 ? 0 : s.WaitSumLanded / s.LandedAfterWait,
-            MaxWaitLanded = s.MaxWaitLanded,
-            QueueExitRate = s.QueueExits / period,
-            MeanTimeInQueue = s.QueueExits == 0 ? 0 : s.QueueTimeSum / s.QueueExits,
-            QueueAtEnd = model.Runways.QueueLength,
-            BusyAtEnd = model.Runways.Busy,
-            RefuelTimingError = s.RefuelTimingError,
-            Events = model.EventCount
+            Enqueued = qs.Enqueued,
+            LandedNoWait = smo.StartedDirect,
+            LandedAfterWait = smo.StartedFromQueue,
+            Refuels = q.Refuels,
+            Diverted = q.TimeoutExits,
+            DivertedRefueled = q.TimeoutExitsRefueled,
+            Released = smo.Quantity,
+            Income = model.Accounting.Income,
+            RefuelCost = model.Accounting.RefuelCost,
+            MeanQueue = qs.Area / period,
+            MaxQueue = qs.MaxLength,
+            MeanBusy = smo.BusyArea / period,
+            MeanWaitLanded = qs.ServedExits == 0 ? 0 : qs.WaitSumServed / qs.ServedExits,
+            MaxWaitLanded = qs.MaxWaitServed,
+            QueueExitRate = qs.Exits / period,
+            MeanTimeInQueue = qs.Exits == 0 ? 0 : qs.WaitSumAll / qs.Exits,
+            QueueAtEnd = q.Length,
+            BusyAtEnd = smo.Busy,
+            RefuelTimingError = q.RefuelTimingError,
+            Events = model.EventCount,
+            QueueExits = qs.Exits,
+            WaitSumAll = qs.WaitSumAll
         };
     }
 }

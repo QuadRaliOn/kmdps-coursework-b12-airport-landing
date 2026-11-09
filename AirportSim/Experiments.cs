@@ -178,11 +178,11 @@ public static class Experiments
             {
                 while (md.Tcurr >= next && next <= tmax)
                 {
-                    RunwayStatistics st = md.Runways.Stats;
                     sb.AppendLine(string.Join(",",
-                        job.m, job.s, F(next), F(md.Tcurr), F(st.QueueArea), F(st.BusyArea), F(st.Income),
-                        F(st.RefuelCost), md.Source.Quantity, st.LandedNoWait + st.LandedAfterWait, st.Diverted,
-                        st.Refuels, md.Runways.QueueLength));
+                        job.m, job.s, F(next), F(md.Tcurr), F(md.Queue.Stats.Area), F(md.Runways.BusyArea),
+                        F(md.Accounting.Income), F(md.Accounting.RefuelCost), md.Source.Quantity,
+                        md.Runways.StartedDirect + md.Runways.StartedFromQueue, md.Queue.TimeoutExits,
+                        md.Queue.Refuels, md.Queue.Length));
                     next += step;
                 }
             });
@@ -209,14 +209,14 @@ public static class Experiments
         {
             w.WriteLine("tag,k,m,seed,interarrival,occupancy,twarm,period,arrivals,landedNoWait,landedAfterWait,refuels,diverted," +
                         "divertedRefueled,income,refuelCost,netProfit,annualProfit,meanQueue,maxQueue,meanBusy,utilization," +
-                        "meanWaitLanded,meanWaitAllLanded,maxWaitLanded,shareDiverted,shareRefueled,shareLandedAfterWait,events");
+                        "meanWaitLanded,meanWaitAllLanded,maxWaitLanded,shareDiverted,shareRefueled,shareLandedAfterWait,events,meanWaitAll");
             foreach (var r in results)
                 w.WriteLine(string.Join(",", tag, r.Runways - ModelParameters.BaseRunways, r.Runways, r.Seed,
                     F(baseParams.MeanInterarrival), F(baseParams.LandingOccupancy), F(r.Twarm), F(r.Period), r.Arrivals,
                     r.LandedNoWait, r.LandedAfterWait, r.Refuels, r.Diverted, r.DivertedRefueled, F(r.Income),
                     F(r.RefuelCost), F(r.NetProfit), F(r.AnnualProfit), F(r.MeanQueue), r.MaxQueue, F(r.MeanBusy),
                     F(r.Utilization), F(r.MeanWaitLanded), F(r.MeanWaitAllLanded), F(r.MaxWaitLanded),
-                    F(r.ShareDiverted), F(r.ShareRefueled), F(r.ShareLandedAfterWait), r.Events));
+                    F(r.ShareDiverted), F(r.ShareRefueled), F(r.ShareLandedAfterWait), r.Events, F(r.MeanWaitAll)));
         }
         PrintPayback(results, tag);
         return results;

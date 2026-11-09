@@ -243,6 +243,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 261555,
+        "QueueExits": 87175,
+        "WaitSumAll": 11967561.43363134,
         "Landed": 30034,
         "NetProfit": -42090386.74788914,
         "AnnualProfit": -42090386.74788914,
@@ -254,7 +256,8 @@
         "MeanWaitAllLanded": 132.10166589969307,
         "LittleQueue": 22.769333016802396,
         "ShareEnqueued": 0.9999770636941214,
-        "MeanWaitPerArrival": 137.24582483120415
+        "MeanWaitPerArrival": 137.24582483120415,
+        "MeanWaitAll": 137.2788858716329
       },
       "conservation": 0,
       "capacityPerYear": 30034.285714285714,
@@ -307,6 +310,8 @@
         "BusyAtEnd": 3,
         "RefuelTimingError": 0,
         "Events": 261533,
+        "QueueExits": 87174,
+        "WaitSumAll": 11756278.443592476,
         "Landed": 45051,
         "NetProfit": -19548678.309975147,
         "AnnualProfit": -19548678.309975147,
@@ -318,7 +323,8 @@
         "MeanWaitAllLanded": 130.04458155407167,
         "LittleQueue": 22.367348636971986,
         "ShareEnqueued": 0.9999655955411821,
-        "MeanWaitPerArrival": 134.82279918796849
+        "MeanWaitPerArrival": 134.82279918796849,
+        "MeanWaitAll": 134.85527654762697
       },
       "conservation": 0,
       "capacityPerYear": 45051.42857142857,
@@ -371,6 +377,8 @@
         "BusyAtEnd": 4,
         "RefuelTimingError": 0,
         "Events": 261371,
+        "QueueExits": 87175,
+        "WaitSumAll": 11402491.781667527,
         "Landed": 60068,
         "NetProfit": 3139024.858768046,
         "AnnualProfit": 3139024.858768046,
@@ -382,7 +390,8 @@
         "MeanWaitAllLanded": 126.6390054882376,
         "LittleQueue": 21.694238549595752,
         "ShareEnqueued": 0.9999541273882429,
-        "MeanWaitPerArrival": 130.76551964113312
+        "MeanWaitPerArrival": 130.76551964113312,
+        "MeanWaitAll": 130.7940189915866
       },
       "conservation": 0,
       "capacityPerYear": 60068.57142857143,
@@ -435,6 +444,8 @@
         "BusyAtEnd": 5,
         "RefuelTimingError": 0,
         "Events": 257328,
+        "QueueExits": 87046,
+        "WaitSumAll": 10373923.16099835,
         "Landed": 75050,
         "NetProfit": 29724904.11534053,
         "AnnualProfit": 29724904.11534053,
@@ -446,7 +457,8 @@
         "MeanWaitAllLanded": 115.59551180544109,
         "LittleQueue": 19.737296729448914,
         "ShareEnqueued": 0.9984403312002569,
-        "MeanWaitPerArrival": 118.96973739074691
+        "MeanWaitPerArrival": 118.96973739074691,
+        "MeanWaitAll": 118.99157120734039
       },
       "conservation": 0,
       "capacityPerYear": 75085.71428571429,
@@ -499,6 +511,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 199114,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 110100320.36198983,
         "AnnualProfit": 110100320.36198983,
@@ -510,7 +524,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -563,6 +578,8 @@
         "BusyAtEnd": 7,
         "RefuelTimingError": 0,
         "Events": 174800,
+        "QueueExits": 46022,
+        "WaitSumAll": 740801.9708242406,
         "Landed": 87198,
         "NetProfit": 150980772.83518115,
         "AnnualProfit": 150980772.83518115,
@@ -574,7 +591,8 @@
         "MeanWaitAllLanded": 8.495630299138059,
         "LittleQueue": 1.4094405837599704,
         "ShareEnqueued": 0.5277873345718939,
-        "MeanWaitPerArrival": 8.495630299138059
+        "MeanWaitPerArrival": 8.495630299138059,
+        "MeanWaitAll": 8.49563029913806
       },
       "conservation": 0,
       "capacityPerYear": 105120,
@@ -627,6 +645,8 @@
         "BusyAtEnd": 7,
         "RefuelTimingError": 0,
         "Events": 174389,
+        "QueueExits": 1388,
+        "WaitSumAll": 6187.45396878411,
         "Landed": 87198,
         "NetProfit": 173702893.13406232,
         "AnnualProfit": 173702893.13406232,
@@ -638,7 +658,8 @@
         "MeanWaitAllLanded": 0.0709586684188182,
         "LittleQueue": 0.011772172695555765,
         "ShareEnqueued": 0.015917796279731188,
-        "MeanWaitPerArrival": 0.0709586684188182
+        "MeanWaitPerArrival": 0.0709586684188182,
+        "MeanWaitAll": 0.0709586684188182
       },
       "conservation": 0,
       "capacityPerYear": 180205.7142857143,
@@ -691,6 +712,8 @@
         "BusyAtEnd": 7,
         "RefuelTimingError": 0,
         "Events": 257400,
+        "QueueExits": 98482,
+        "WaitSumAll": 6806330.923535801,
         "Landed": 103141,
         "NetProfit": 110310056.38681355,
         "AnnualProfit": 110310056.38681355,
@@ -702,7 +725,8 @@
         "MeanWaitAllLanded": 63.621943975099974,
         "LittleQueue": 12.949640265479072,
         "ShareEnqueued": 0.938954873887099,
-        "MeanWaitPerArrival": 64.88028257235811
+        "MeanWaitPerArrival": 64.88028257235811,
+        "MeanWaitAll": 64.89265415342182
       },
       "conservation": 0,
       "capacityPerYear": 105120,
@@ -755,6 +779,8 @@
         "BusyAtEnd": 3,
         "RefuelTimingError": 0,
         "Events": 139983,
+        "QueueExits": 16286,
+        "WaitSumAll": 141790.65648808636,
         "Landed": 69993,
         "NetProfit": 131851288.18843646,
         "AnnualProfit": 131851288.18843646,
@@ -766,7 +792,8 @@
         "MeanWaitAllLanded": 2.0257833853111933,
         "LittleQueue": 0.2697691333487183,
         "ShareEnqueued": 0.2326804108982327,
-        "MeanWaitPerArrival": 2.0257833853111933
+        "MeanWaitPerArrival": 2.0257833853111933,
+        "MeanWaitAll": 2.0257833853111933
       },
       "conservation": 0,
       "capacityPerYear": 105120,
@@ -819,6 +846,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 129740,
+        "QueueExits": 43675,
+        "WaitSumAll": 5433132.201761449,
         "Landed": 30031,
         "NetProfit": 2726245.6964143217,
         "AnnualProfit": 2726245.6964143217,
@@ -830,7 +859,8 @@
         "MeanWaitAllLanded": 117.24591927546396,
         "LittleQueue": 10.337009516288907,
         "ShareEnqueued": 0.9996796265360763,
-        "MeanWaitPerArrival": 124.3308131023925
+        "MeanWaitPerArrival": 124.3308131023925,
+        "MeanWaitAll": 124.35927125275124
       },
       "conservation": 0,
       "capacityPerYear": 30034.285714285714,
@@ -883,6 +913,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 34932,
+        "QueueExits": 7207,
+        "WaitSumAll": 155648.08915198047,
         "Landed": 17404,
         "NetProfit": 31081892.250423275,
         "AnnualProfit": 31081892.250423275,
@@ -894,7 +926,8 @@
         "MeanWaitAllLanded": 8.943236563547487,
         "LittleQueue": 0.29613411178078475,
         "ShareEnqueued": 0.41410020684900023,
-        "MeanWaitPerArrival": 8.943236563547487
+        "MeanWaitPerArrival": 8.943236563547487,
+        "MeanWaitAll": 8.943236563547487
       },
       "conservation": 0,
       "capacityPerYear": 30034.285714285714,
@@ -947,6 +980,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 261515,
+        "QueueExits": 87177,
+        "WaitSumAll": 11691520.668322342,
         "Landed": 52560,
         "NetProfit": -8255382.570070878,
         "AnnualProfit": -8255382.570070878,
@@ -958,7 +993,8 @@
         "MeanWaitAllLanded": 130.22946477021085,
         "LittleQueue": 22.244141301983145,
         "ShareEnqueued": 0.9999770636941214,
-        "MeanWaitPerArrival": 134.08014711716257
+        "MeanWaitPerArrival": 134.08014711716257,
+        "MeanWaitAll": 134.10936886546463
       },
       "conservation": 0,
       "capacityPerYear": 52560,
@@ -1011,6 +1047,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 261551,
+        "QueueExits": 87170,
+        "WaitSumAll": 17197358.817484394,
         "Landed": 30034,
         "NetProfit": -42073720.50912149,
         "AnnualProfit": -42073720.50912149,
@@ -1022,7 +1060,8 @@
         "MeanWaitAllLanded": 192.107572001213,
         "LittleQueue": 32.71948024635539,
         "ShareEnqueued": 0.9999770636941214,
-        "MeanWaitPerArrival": 197.22194107071715
+        "MeanWaitPerArrival": 197.22194107071715,
+        "MeanWaitAll": 197.2807646662276
       },
       "conservation": 0,
       "capacityPerYear": 30034.285714285714,
@@ -1075,6 +1114,8 @@
         "BusyAtEnd": 2,
         "RefuelTimingError": 0,
         "Events": 257751,
+        "QueueExits": 87574,
+        "WaitSumAll": 12184592,
         "Landed": 30034,
         "NetProfit": -42483238.955101684,
         "AnnualProfit": -42483238.955101684,
@@ -1086,7 +1127,8 @@
         "MeanWaitAllLanded": 137.46793633881603,
         "LittleQueue": 23.18225266362253,
         "ShareEnqueued": 0.9999771689497717,
-        "MeanWaitPerArrival": 139.09351598173518
+        "MeanWaitPerArrival": 139.09351598173518,
+        "MeanWaitAll": 139.1316342376907
       },
       "conservation": 0,
       "capacityPerYear": 30034.285714285714,
@@ -1139,6 +1181,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 187116,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 122110156.90710668,
         "AnnualProfit": 122110156.90710668,
@@ -1150,7 +1194,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1203,6 +1248,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 174377,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 134849781.53536162,
         "AnnualProfit": 134849781.53536162,
@@ -1214,7 +1261,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1267,6 +1315,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 211628,
+        "QueueExits": 78798,
+        "WaitSumAll": 7405219.908797678,
         "Landed": 87178,
         "NetProfit": 97697391.77434018,
         "AnnualProfit": 97697391.77434018,
@@ -1278,7 +1328,8 @@
         "MeanWaitAllLanded": 84.9436774048232,
         "LittleQueue": 14.089078974120392,
         "ShareEnqueued": 0.90389687836877,
-        "MeanWaitPerArrival": 84.92419446314914
+        "MeanWaitPerArrival": 84.92419446314914,
+        "MeanWaitAll": 84.9436774048232
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1331,6 +1382,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 199114,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 85363320.36198962,
         "AnnualProfit": 85363320.36198962,
@@ -1342,7 +1395,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1395,6 +1449,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 199114,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 131210320.36199087,
         "AnnualProfit": 131210320.36199087,
@@ -1406,7 +1462,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1459,6 +1516,8 @@
         "BusyAtEnd": 6,
         "RefuelTimingError": 0,
         "Events": 199114,
+        "QueueExits": 76630,
+        "WaitSumAll": 4154798.0968383825,
         "Landed": 86379,
         "NetProfit": 223836320.36199147,
         "AnnualProfit": 223836320.36199147,
@@ -1470,7 +1529,8 @@
         "MeanWaitAllLanded": 46.79329578761485,
         "LittleQueue": 7.904867003117166,
         "ShareEnqueued": 0.8789536457258194,
-        "MeanWaitPerArrival": 47.64786000640362
+        "MeanWaitPerArrival": 47.64786000640362,
+        "MeanWaitAll": 47.654964693908155
       },
       "conservation": 0,
       "capacityPerYear": 90102.85714285714,
@@ -1504,6 +1564,8 @@
     "BusyAtEnd": 2,
     "RefuelTimingError": 0,
     "Events": 160,
+    "QueueExits": 44,
+    "WaitSumAll": 5420,
     "Landed": 24,
     "NetProfit": -13000,
     "AnnualProfit": -16268571.42857143,
@@ -1515,6 +1577,7 @@
     "MeanWaitAllLanded": 97.5,
     "LittleQueue": 12.904761904761905,
     "ShareEnqueued": 0.9714285714285714,
-    "MeanWaitPerArrival": 77.42857142857143
+    "MeanWaitPerArrival": 77.42857142857143,
+    "MeanWaitAll": 117.82608695652173
   }
 }

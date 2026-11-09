@@ -2,11 +2,13 @@ using System.Globalization;
 
 namespace AirportSim;
 
+/// <summary>Протокол подій: стан мережі після кожної зміни стану елемента.</summary>
 public sealed class EventLog
 {
     private readonly TextWriter writer;
     private readonly int maxLines;
     private int lines;
+    private Model? model;
 
     public EventLog(TextWriter writer, int maxLines = int.MaxValue)
     {
@@ -16,18 +18,16 @@ public sealed class EventLog
         writer.WriteLine(new string('-', 124));
     }
 
-    public void Event(double t, string description, Plane plane, Runways runways, int channel = -1)
-    {
-        if (lines++ >= maxLines) return;
-        string ch = channel >= 0 ? $"D{channel + 1}" : "–";
-        double net = runways.Stats.Income - runways.Stats.RefuelCost;
-        writer.WriteLine(string.Create(CultureInfo.InvariantCulture,
-            $"{t,10:F2} | {description,-44} | {plane.Id,5} | {plane.ArrivalTime,7:F2} | {ch,5} | {runways.QueueLength,2} | {runways.Busy,2}/{runways.Channels,-2} | {runways.Stats.Refuels,3} | {runways.Stats.Diverted,3} | {net,12:F2}"));
-    }
+    public void Attach(Model m) => model = m;
 
-    public void Note(string text)
+    public void Event(double t, string description, Request request, int channel = -1)
     {
-        if (lines >= maxLines) return;
-        writer.WriteLine(text);
+        if (lines++ >= maxLines || model is null) return;
+        string ch = channel >= 0 ? $"D{channel + 1}" : "–";
+        Process smo = model.Runways;
+        TimedQueue q = model.Queue;
+        double net = model.Accounting.Income - model.Accounting.RefuelCost;
+        writer.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"{t,10:F2} | {description,-44} | {request.Id,5} | {request.ArrivalTime,7:F2} | {ch,5} | {q.Length,2} | {smo.Busy,2}/{smo.Channels,-2} | {q.Refuels,3} | {q.TimeoutExits,3} | {net,12:F2}"));
     }
 }

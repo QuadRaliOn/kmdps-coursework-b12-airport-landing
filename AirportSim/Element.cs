@@ -1,5 +1,6 @@
 namespace AirportSim;
 
+/// <summary>Елемент мережі МО: поточний час, момент найближчої зміни стану, правила входу і виходу запиту.</summary>
 public abstract class Element
 {
     protected Element(string name) => Name = name;
@@ -14,7 +15,7 @@ public abstract class Element
 
     public EventLog? Log { get; set; }
 
-    public virtual void InAct(Plane plane) { }
+    public virtual void InAct(Request request) { }
 
     public abstract void OutAct();
 

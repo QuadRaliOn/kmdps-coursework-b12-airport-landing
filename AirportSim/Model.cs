@@ -1,5 +1,6 @@
 namespace AirportSim;
 
+/// <summary>Мережа МО задачі B12 і алгоритм імітації з просуванням часу до найближчої події.</summary>
 public sealed class Model
 {
     private readonly List<Element> elements;
@@ -10,24 +11,31 @@ public sealed class Model
         Seed = seed;
         var streams = new RandomStreams(seed);
         Source = new Create(parameters, streams);
-        Runways = new Runways(parameters, streams);
+        Queue = new TimedQueue("Q", parameters.RefuelEnabled);
+        Runways = new Process("СМО", parameters.Runways, Queue,
+                              () => streams.Service.Sample(parameters.OccupancyDist, parameters.LandingOccupancy));
         Landed = new Dispose("N1");
         OtherAirport = new Dispose("N2");
+        Accounting = new Accounting(parameters, Runways, Queue);
 
         Source.Next = Runways;
-        Runways.LandedExit = Landed;
-        Runways.DivertedExit = OtherAirport;
+        Runways.Next = Landed;
+        Queue.TimeoutExit = OtherAirport;
 
-        elements = new List<Element> { Runways, Source, Landed, OtherAirport };
+        // порядок у списку задає пріоритет одночасних змін стану: вихід з каналу, черга, надходження
+        elements = new List<Element> { Runways, Queue, Source, Landed, OtherAirport };
+        log?.Attach(this);
         foreach (Element e in elements) e.Log = log;
     }
 
     public ModelParameters Parameters { get; }
     public int Seed { get; }
     public Create Source { get; }
-    public Runways Runways { get; }
+    public Process Runways { get; }
+    public TimedQueue Queue { get; }
     public Dispose Landed { get; }
     public Dispose OtherAirport { get; }
+    public Accounting Accounting { get; }
 
     public double Tcurr { get; private set; }
 
@@ -48,6 +56,7 @@ public sealed class Model
             {
                 Advance(Math.Min(twarm, tmod));
                 foreach (Element e in elements) e.ResetStatistics();
+                Accounting.Reset();
                 StatStart = twarm;
                 warmedUp = true;
             }

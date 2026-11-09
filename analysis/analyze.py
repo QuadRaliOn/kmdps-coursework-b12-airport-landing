@@ -69,7 +69,7 @@ def series_indicators(df):
                 landed0=("landedNoWait", "mean"), landedW=("landedAfterWait", "mean"),
                 refuels=("refuels", "mean"), diverted=("diverted", "mean"),
                 income=("income", "mean"), refuelCost=("refuelCost", "mean"),
-                events=("events", "mean")).reset_index()
+                events=("events", "mean"), waitAllPassed=("meanWaitAll", "mean")).reset_index()
     return out
 
 summary = {}
@@ -372,6 +372,43 @@ ax.set_xticks(range(1, 11))
 ax.legend(fontsize=9.5)
 save(fig, "fig_5_1_sensitivity.png")
 summary["scenarios"] = scen
+
+# ---- модифікація моделі: дисперсійний аналіз, фактор – модель (початкова / модифікована)
+scen_piv = {tag: pd.read_csv(RES / f"series_{tag}.csv").pivot(index="seed", columns="k", values="annualProfit")
+            for tag in ("lambda8", "main", "lambda12", "occ30")}
+
+
+def two_level(a, b):
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    g, gc = cochran([a, b])
+    an = anova([a, b])
+    d = b - a
+    t = d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))
+    return {"mean_a": a.mean(), "mean_b": b.mean(), "sd_a": a.std(ddof=1), "sd_b": b.std(ddof=1),
+            "cochran_G": g, "cochran_crit": gc, **{f"anova_{k}": v for k, v in an.items()},
+            "paired_t": t, "t_crit": stats.t.ppf(0.975, len(d) - 1), "diff_mean": d.mean(), "diff_sd": d.std(ddof=1)}
+
+
+def payback(piv, k):
+    return RUNWAY_COST * k / (piv[k] - piv[0])
+
+
+mod = {"profit_m7_vs_m6_occ30": two_level(scen_piv["main"][5] / 1e6, scen_piv["occ30"][4] / 1e6),
+       "T_best_vs_occ30_best_days": two_level(payback(scen_piv["main"], 5) * 365, payback(scen_piv["occ30"], 4) * 365)}
+sens = {}
+for tag, piv in scen_piv.items():
+    Ts = {k: payback(piv, k) * 365 for k in range(1, 11)}
+    kb = min(Ts, key=lambda k: Ts[k].mean())
+    row = {"best_k": kb, "T": {k: [float(Ts[k].mean()), float(ci_half(Ts[k]))] for k in range(3, 8)}}
+    if kb != 5:
+        d = Ts[5] - Ts[kb]
+        row["k5_vs_best"] = {"diff": float(d.mean()), "t": float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))),
+                             "share": float((d > 0).mean())}
+    sens[tag] = row
+summary["modification"] = mod
+summary["sensitivity"] = sens
+print("Модифікація:", {k: {kk: round(float(vv), 5) for kk, vv in v.items()} for k, v in mod.items()})
+print("Чутливість:", sens)
 
 ver = json.loads((RES / "verification.json").read_text(encoding="utf-8"))
 summary["verification"] = ver

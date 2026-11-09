@@ -8,13 +8,12 @@ public enum PlaneState
     Diverted
 }
 
-public sealed class Plane
+/// <summary>Запит задачі B12 – літак з атрибутами θ, c, π і максимальним часом очікування.</summary>
+public sealed class Plane : Request
 {
     public Plane(int id, double arrivalTime, double refuelThreshold, double refuelCost,
-                 double patience, double profitAfterWait)
+                 double patience, double profitAfterWait) : base(id, arrivalTime)
     {
-        Id = id;
-        ArrivalTime = arrivalTime;
         RefuelThreshold = refuelThreshold;
         RefuelCost = refuelCost;
         Patience = patience;
@@ -23,8 +22,6 @@ public sealed class Plane
         LeaveMoment = arrivalTime + patience;
     }
 
-    public int Id { get; }
-    public double ArrivalTime { get; }
     public double RefuelThreshold { get; }
     public double RefuelCost { get; }
     public double Patience { get; }
@@ -35,5 +32,4 @@ public sealed class Plane
 
     public bool Refueled { get; set; }
     public PlaneState State { get; set; } = PlaneState.Waiting;
-    public double LandingTime { get; set; } = double.NaN;
 }
