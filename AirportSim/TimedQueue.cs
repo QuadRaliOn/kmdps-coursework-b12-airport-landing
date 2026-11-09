@@ -10,7 +10,8 @@ public sealed class TimedQueue : Queue
     private double nextRefuel = double.PositiveInfinity;
     private double nextLeave = double.PositiveInfinity;
 
-    public TimedQueue(string name, bool refuelEnabled) : base(name) => this.refuelEnabled = refuelEnabled;
+    public TimedQueue(string name, bool refuelEnabled, int maxLength = int.MaxValue) : base(name, maxLength)
+        => this.refuelEnabled = refuelEnabled;
 
     public Element? TimeoutExit { get; set; }
 
@@ -64,7 +65,6 @@ public sealed class TimedQueue : Queue
         double w = RecordExit(plane);
         TimeoutExits++;
         if (plane.Refueled) TimeoutExitsRefueled++;
-        Quantity++;
         TimedOut?.Invoke(plane, w);
         Log?.Event(Tcurr, $"відхід в інший аеропорт, w={w:F2}", plane);
         TimeoutExit?.InAct(plane);

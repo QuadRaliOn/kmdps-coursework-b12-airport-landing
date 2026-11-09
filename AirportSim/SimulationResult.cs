@@ -31,6 +31,7 @@ public sealed record SimulationResult
     public double RefuelTimingError { get; init; }
     public long Events { get; init; }
     public long QueueExits { get; init; }
+    public long Failures { get; init; }
     public double WaitSumAll { get; init; }
 
     public long Landed => LandedNoWait + LandedAfterWait;
@@ -85,6 +86,7 @@ public sealed record SimulationResult
             RefuelTimingError = q.RefuelTimingError,
             Events = model.EventCount,
             QueueExits = qs.Exits,
+            Failures = smo.Failures,
             WaitSumAll = qs.WaitSumAll
         };
     }

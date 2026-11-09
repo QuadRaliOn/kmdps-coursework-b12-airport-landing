@@ -35,7 +35,7 @@ public static class Experiments
             var r = Run(p, 1, 300.0, 0.0, new EventLog(w));
             w.WriteLine();
             w.WriteLine($"Підсумок: надійшло {r.Arrivals}, сіли без очікування {r.LandedNoWait}, після очікування {r.LandedAfterWait}, " +
-                        $"дозаправок {r.Refuels}, відльотів {r.Diverted}, у черзі наприкінці {r.QueueAtEnd}.");
+                        $"дозаправок {r.Refuels}, відходів {r.Diverted}, у черзі наприкінці {r.QueueAtEnd}.");
         }
 
         using (var w = new StreamWriter(Path.Combine(outDir, "trace_deterministic_m2.txt"), false, new UTF8Encoding(false)))
@@ -45,7 +45,7 @@ public static class Experiments
             var r = Run(p, 1, 420.0, 0.0, new EventLog(w));
             w.WriteLine();
             w.WriteLine($"Підсумок: надійшло {r.Arrivals}, сіли без очікування {r.LandedNoWait}, після очікування {r.LandedAfterWait}, " +
-                        $"дозаправок {r.Refuels}, відльотів {r.Diverted}, у черзі наприкінці {r.QueueAtEnd}, " +
+                        $"дозаправок {r.Refuels}, відходів {r.Diverted}, у черзі наприкінці {r.QueueAtEnd}, " +
                         $"прибуток {r.NetProfit.ToString("F2", Inv)} грн.");
         }
     }

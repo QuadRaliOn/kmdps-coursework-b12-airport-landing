@@ -1,9 +1,10 @@
 namespace AirportSim;
 
 /// <summary>Універсальна багатоканальна СМО мережі МО: m однакових пристроїв і черга.
-/// Подія елемента – вихід запиту з каналу; при надходженні запит займає вільний канал або стає в чергу.
+/// Подія елемента – вихід запиту з каналу; при надходженні запит займає вільний канал, стає в чергу
+/// або, якщо черга заповнена, отримує відмову.
 /// Специфіка задачі задається параметрами (кількість каналів, генератор часу обслуговування, черга)
-/// і підписками на подію початку обслуговування.</summary>
+/// і підписками на подію ChannelOccupied.</summary>
 public sealed class Process : Element
 {
     private readonly double[] channelTnext;
@@ -21,13 +22,14 @@ public sealed class Process : Element
     public Queue Queue { get; }
     public Element? Next { get; set; }
 
-    /// <summary>Початок обслуговування: запит і ознака «чекав у черзі».</summary>
-    public event Action<Request, bool>? ServiceStarted;
+    /// <summary>Канал зайнято запитом (у момент надходження або виходу іншого запиту з каналу); ознака «чекав у черзі».</summary>
+    public event Action<Request, bool>? ChannelOccupied;
 
     public int Channels => channelTnext.Length;
     public int Busy { get; private set; }
     public long StartedDirect { get; private set; }
     public long StartedFromQueue { get; private set; }
+    public long Failures { get; private set; }
     public double BusyArea { get; private set; }
 
     public override void InAct(Request request)
@@ -36,6 +38,11 @@ public sealed class Process : Element
         if (r >= 0)
         {
             Start(request, r, waited: false);
+        }
+        else if (Queue.IsFull)
+        {
+            Failures++;                                  // відмова: черга заповнена
+            Log?.Event(Tcurr, "відмова: черга заповнена", request);
         }
         else
         {
@@ -67,9 +74,9 @@ public sealed class Process : Element
         Busy++;
         if (waited) StartedFromQueue++;
         else StartedDirect++;
-        ServiceStarted?.Invoke(request, waited);
-        Log?.Event(Tcurr, waited ? $"посадка після очікування, w={Tcurr - request.EnqueueTime:F2}"
-                                 : "надходження → посадка без очікування", request, r);
+        ChannelOccupied?.Invoke(request, waited);
+        Log?.Event(Tcurr, waited ? $"канал зайнято з черги, w={Tcurr - request.EnqueueTime:F2}"
+                                 : "надходження → канал", request, r);
     }
 
     private void Complete(int r)
@@ -79,7 +86,7 @@ public sealed class Process : Element
         channelTnext[r] = double.PositiveInfinity;
         Busy--;
         Quantity++;
-        Log?.Event(Tcurr, "звільнення смуги", request, r);
+        Log?.Event(Tcurr, "вихід з каналу", request, r);
         Next?.InAct(request);
     }
 
@@ -96,7 +103,7 @@ public sealed class Process : Element
     public override void ResetStatistics()
     {
         base.ResetStatistics();
-        StartedDirect = StartedFromQueue = 0;
+        StartedDirect = StartedFromQueue = Failures = 0;
         BusyArea = 0.0;
     }
 }

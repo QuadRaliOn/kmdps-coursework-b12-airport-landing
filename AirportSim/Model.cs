@@ -11,7 +11,7 @@ public sealed class Model
         Seed = seed;
         var streams = new RandomStreams(seed);
         Source = new Create(parameters, streams);
-        Queue = new TimedQueue("Q", parameters.RefuelEnabled);
+        Queue = new TimedQueue("Q", parameters.RefuelEnabled, parameters.MaxQueueLength);
         Runways = new Process("СМО", parameters.Runways, Queue,
                               () => streams.Service.Sample(parameters.OccupancyDist, parameters.LandingOccupancy));
         Landed = new Dispose("N1");

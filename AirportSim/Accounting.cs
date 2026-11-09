@@ -9,7 +9,7 @@ public sealed class Accounting
     public Accounting(ModelParameters p, Process runways, TimedQueue queue)
     {
         this.p = p;
-        runways.ServiceStarted += OnLanding;
+        runways.ChannelOccupied += OnLanding;
         queue.Refueled += OnRefuel;
         queue.TimedOut += (plane, _) => plane.State = PlaneState.Diverted;
     }

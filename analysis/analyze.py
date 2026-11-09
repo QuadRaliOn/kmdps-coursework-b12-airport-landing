@@ -251,6 +251,25 @@ summary["main"]["cochran_steps"] = {
 summary["main"]["anova_ln_stable"] = anova(lnT)
 
 
+def anova_blocks(arrs):
+    """Двофакторний дисперсійний аналіз без повторень: фактор – рівень k, блок – реплікація
+    (загальні випадкові числа роблять значення однієї реплікації залежними)."""
+    Y_ = np.array(arrs)
+    q_, n_ = Y_.shape
+    g = Y_.mean()
+    ss_k = n_ * ((Y_.mean(axis=1) - g) ** 2).sum()
+    ss_b = q_ * ((Y_.mean(axis=0) - g) ** 2).sum()
+    ss_e = ((Y_ - g) ** 2).sum() - ss_k - ss_b
+    df_k, df_b, df_e = q_ - 1, n_ - 1, (q_ - 1) * (n_ - 1)
+    ms_k, ms_b, ms_e = ss_k / df_k, ss_b / df_b, ss_e / df_e
+    return {"df_k": df_k, "df_b": df_b, "df_e": df_e, "MS_k": ms_k, "MS_b": ms_b, "MS_e": ms_e,
+            "F_k": ms_k / ms_e, "F_k_crit": stats.f.ppf(0.95, df_k, df_e),
+            "F_b": ms_b / ms_e, "F_b_crit": stats.f.ppf(0.95, df_b, df_e)}
+
+
+summary["main"]["anova_blocks_ln_stable"] = anova_blocks(lnT)
+
+
 def chi2_normal(x, alpha=0.05):
     """Критерій χ² Пірсона: рівні інтервали за Стерджесом, об’єднання інтервалів з очікуваною частотою < 5."""
     x = np.asarray(x, float)

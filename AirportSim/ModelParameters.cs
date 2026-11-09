@@ -31,6 +31,7 @@ public sealed record ModelParameters
     public double RefuelCostDev { get; init; } = 200.0;
 
     public double MaxWait { get; init; } = 140.0;
+    public int MaxQueueLength { get; init; } = int.MaxValue;
     public Dist PatienceDist { get; init; } = Dist.Det;
 
     public double ProfitNoWait { get; init; } = 2000.0;

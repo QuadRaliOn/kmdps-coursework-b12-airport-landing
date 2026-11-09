@@ -19,8 +19,9 @@ public sealed class QueueStatistics
     }
 }
 
-/// <summary>Черга мережі МО з дисципліною FIFO. Власних подій не має: запит виходить з неї
-/// лише тоді, коли пристрій СМО звільнився (метод TakeFirst).</summary>
+/// <summary>Черга мережі МО з дисципліною FIFO і максимальною довжиною MaxLength (за її досягнення
+/// СМО відмовляє новому запиту). Власних подій не має: запит виходить з неї лише тоді,
+/// коли канал СМО звільнився (метод TakeFirst). Quantity – кількість запитів, що вийшли з черги.</summary>
 public class Queue : Element
 {
     protected readonly LinkedList<Request> Items = new();
@@ -57,6 +58,7 @@ public class Queue : Element
     protected double RecordExit(Request request)
     {
         double w = Tcurr - request.EnqueueTime;
+        Quantity++;
         Stats.Exits++;
         Stats.WaitSumAll += w;
         return w;

@@ -70,6 +70,7 @@ public static class Program
         Console.WriteLine($"Сіли після очікування (1500±100):  {r.LandedAfterWait}");
         Console.WriteLine($"Дозаправок (1000±200 грн):         {r.Refuels}");
         Console.WriteLine($"Відлетіли в інший аеропорт:        {r.Diverted} ({r.ShareDiverted:P2})");
+        if (r.Failures > 0) Console.WriteLine($"Відмов (черга заповнена):          {r.Failures}");
         Console.WriteLine($"У черзі / на смугах наприкінці:    {r.QueueAtEnd} / {r.BusyAtEnd}");
         Console.WriteLine($"Середня довжина черги:             {r.MeanQueue:F4} (Літтл: {r.LittleQueue:F4}), max {r.MaxQueue}");
         Console.WriteLine($"Середнє очікування тих, хто чекав: {r.MeanWaitLanded:F2} хв, max {r.MaxWaitLanded:F2} хв");
@@ -85,6 +86,7 @@ public static class Program
         MeanInterarrival = GetDouble(opt, "interarrival", 6.0),
         LandingOccupancy = GetDouble(opt, "occupancy", 35.0),
         MaxWait = GetDouble(opt, "maxwait", 140.0),
+        MaxQueueLength = GetInt(opt, "maxqueue", int.MaxValue),
         RefuelThresholdMean = GetDouble(opt, "threshold", 70.0),
         RefuelCostMean = GetDouble(opt, "refuelcost", 1000.0),
         ProfitNoWait = GetDouble(opt, "profit0", 2000.0),
