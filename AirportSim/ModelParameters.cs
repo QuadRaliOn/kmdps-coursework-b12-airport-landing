@@ -40,8 +40,11 @@ public sealed record ModelParameters
 
     public int AdditionalRunways => Runways - BaseRunways;
 
-    public override string ToString() =>
-        $"m={Runways}, інтервал={InterarrivalDist}({MeanInterarrival}), смуга={OccupancyDist}({LandingOccupancy}), " +
-        $"дозаправка={(RefuelEnabled ? $"unif({RefuelThresholdMean},{RefuelThresholdDev})" : "вимкнена")}, " +
-        $"відхід={PatienceDist}({MaxWait})";
+    public override string ToString()
+    {
+        string refuel = RefuelEnabled ? $"unif({RefuelThresholdMean},{RefuelThresholdDev})" : "вимкнена";
+        return $"m={Runways}, інтервал={InterarrivalDist}({MeanInterarrival}), " +
+               $"смуга={OccupancyDist}({LandingOccupancy}), " +
+               $"дозаправка={refuel}, відхід={PatienceDist}({MaxWait})";
+    }
 }
