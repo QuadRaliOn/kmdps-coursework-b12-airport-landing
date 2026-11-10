@@ -270,6 +270,49 @@ def anova_blocks(arrs):
 summary["main"]["anova_blocks_ln_stable"] = anova_blocks(lnT)
 
 
+def regression_lnT(levels, samples, degree=3, alpha=0.05):
+    """Рівняння регресії y = ln T за кодованим фактором x = (k − k0)/Δk ∈ [−1; 1]:
+    відтворюваність (Кохрен), значимість коефіцієнтів (Стьюдент), адекватність (Фішер)."""
+    k = np.array(levels, float)
+    k0, dk = (k.max() + k.min()) / 2, (k.max() - k.min()) / 2
+    x = (k - k0) / dk
+    Y_ = np.array(samples)
+    q_, n_ = Y_.shape
+    ybar_ = Y_.mean(axis=1)
+    s2_rep = Y_.var(axis=1, ddof=1).mean()
+    X = np.vander(x, degree + 1, increasing=True)
+    b = np.linalg.solve(X.T @ X, X.T @ ybar_)
+    s_b = np.sqrt(s2_rep / n_ * np.diag(np.linalg.inv(X.T @ X)))
+    t_b = np.abs(b) / s_b
+    df_rep = q_ * (n_ - 1)
+    t_crit = stats.t.ppf(1 - alpha / 2, df_rep)
+    keep = t_b > t_crit
+    Xk = X[:, keep]
+    bk = np.linalg.lstsq(Xk, ybar_, rcond=None)[0]
+    yhat = Xk @ bk
+    d = int(keep.sum())
+    s2_ad = n_ * ((ybar_ - yhat) ** 2).sum() / (q_ - d)
+    F_ad = s2_ad / s2_rep
+    F_crit = stats.f.ppf(1 - alpha, q_ - d, df_rep)
+    grid = np.linspace(-1, 1, 2001)
+    coef = np.zeros(degree + 1)
+    coef[keep] = bk
+    ygrid = np.vander(grid, degree + 1, increasing=True) @ coef
+    g, gc = cochran(samples)
+    return {"k0": k0, "dk": dk, "levels": levels, "b": b.tolist(), "s_b": s_b.tolist(), "t": t_b.tolist(),
+            "t_crit": t_crit, "keep": keep.tolist(), "b_final": coef.tolist(), "d": d,
+            "s2_rep": s2_rep, "s2_ad": s2_ad, "F": F_ad, "F_crit": F_crit, "df_ad": q_ - d, "df_rep": df_rep,
+            "cochran_G": g, "cochran_crit": gc,
+            "T_days_model": (np.exp(yhat) * 365).tolist(), "T_days_sim": (np.exp(ybar_) * 365).tolist(),
+            "max_rel_err_pct": float(np.max(np.abs(np.exp(yhat - ybar_) - 1)) * 100),
+            "argmin_k": float(k0 + dk * grid[int(np.argmin(ygrid))])}
+
+
+summary["main"]["regression_lnT"] = regression_lnT(STABLE, lnT)
+print("Регресія ln T:", {k: v for k, v in summary["main"]["regression_lnT"].items() if k in
+                         ("b_final", "t", "keep", "F", "F_crit", "max_rel_err_pct", "argmin_k")})
+
+
 def chi2_normal(x, alpha=0.05):
     """Критерій χ² Пірсона: рівні інтервали за Стерджесом, об’єднання інтервалів з очікуваною частотою < 5."""
     x = np.asarray(x, float)
@@ -424,8 +467,12 @@ for tag, piv in scen_piv.items():
         row["k5_vs_best"] = {"diff": float(d.mean()), "t": float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))),
                              "share": float((d > 0).mean())}
     sens[tag] = row
+grid_ln = [np.log(payback(scen_piv[tag], k).values) for tag in ("lambda8", "main", "lambda12") for k in range(3, 8)]
+g_grid, gc_grid = cochran(grid_ln)
+plan = {"cells": len(grid_ln), "n": len(grid_ln[0]), "cochran_G_lnT": g_grid, "cochran_crit": gc_grid}
 summary["modification"] = mod
 summary["sensitivity"] = sens
+summary["plan_lambda_k"] = plan
 print("Модифікація:", {k: {kk: round(float(vv), 5) for kk, vv in v.items()} for k, v in mod.items()})
 print("Чутливість:", sens)
 
