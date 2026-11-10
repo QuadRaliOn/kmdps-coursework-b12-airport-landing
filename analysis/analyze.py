@@ -182,8 +182,6 @@ summary["main"]["anova"] = {"q": q, "n": n, "SS_f": SS_f, "SS_r": SS_r, "D_f": D
                             "s2_max_k": int(sorted(Tmat)[int(s2.argmax())]),
                             "near": {"F": F_n, "F_crit": stats.f.ppf(0.95, 2, 3 * (n - 1)),
                                      "D_f": SSf_n / 2, "D_r": SSr_n / (3 * (n - 1))}}
-summary["main"]["kruskal"] = dict(zip(("H", "p_value"),
-                                      stats.kruskal(*[Tmat[k].values for k in sorted(Tmat)])))
 
 
 def cochran(arrs, alpha=0.05):
@@ -234,49 +232,6 @@ def anova_blocks(arrs):
 
 
 summary["main"]["anova_blocks_ln_stable"] = anova_blocks(lnT)
-
-
-def regression_lnT(levels, samples, degree=3, alpha=0.05):
-    """Рівняння регресії y = ln T за кодованим фактором x = (k − k0)/Δk ∈ [−1; 1]:
-    відтворюваність (Кохрен), значимість коефіцієнтів (Стьюдент), адекватність (Фішер)."""
-    k = np.array(levels, float)
-    k0, dk = (k.max() + k.min()) / 2, (k.max() - k.min()) / 2
-    x = (k - k0) / dk
-    Y_ = np.array(samples)
-    q_, n_ = Y_.shape
-    ybar_ = Y_.mean(axis=1)
-    s2_rep = Y_.var(axis=1, ddof=1).mean()
-    X = np.vander(x, degree + 1, increasing=True)
-    b = np.linalg.solve(X.T @ X, X.T @ ybar_)
-    s_b = np.sqrt(s2_rep / n_ * np.diag(np.linalg.inv(X.T @ X)))
-    t_b = np.abs(b) / s_b
-    df_rep = q_ * (n_ - 1)
-    t_crit = stats.t.ppf(1 - alpha / 2, df_rep)
-    keep = t_b > t_crit
-    Xk = X[:, keep]
-    bk = np.linalg.lstsq(Xk, ybar_, rcond=None)[0]
-    yhat = Xk @ bk
-    d = int(keep.sum())
-    s2_ad = n_ * ((ybar_ - yhat) ** 2).sum() / (q_ - d)
-    F_ad = s2_ad / s2_rep
-    F_crit = stats.f.ppf(1 - alpha, q_ - d, df_rep)
-    grid = np.linspace(-1, 1, 2001)
-    coef = np.zeros(degree + 1)
-    coef[keep] = bk
-    ygrid = np.vander(grid, degree + 1, increasing=True) @ coef
-    g, gc = cochran(samples)
-    return {"k0": k0, "dk": dk, "levels": levels, "b": b.tolist(), "s_b": s_b.tolist(), "t": t_b.tolist(),
-            "t_crit": t_crit, "keep": keep.tolist(), "b_final": coef.tolist(), "d": d,
-            "s2_rep": s2_rep, "s2_ad": s2_ad, "F": F_ad, "F_crit": F_crit, "df_ad": q_ - d, "df_rep": df_rep,
-            "cochran_G": g, "cochran_crit": gc,
-            "T_days_model": (np.exp(yhat) * 365).tolist(), "T_days_sim": (np.exp(ybar_) * 365).tolist(),
-            "max_rel_err_pct": float(np.max(np.abs(np.exp(yhat - ybar_) - 1)) * 100),
-            "argmin_k": float(k0 + dk * grid[int(np.argmin(ygrid))])}
-
-
-summary["main"]["regression_lnT"] = regression_lnT(STABLE, lnT)
-print("Регресія ln T:", {k: v for k, v in summary["main"]["regression_lnT"].items() if k in
-                         ("b_final", "t", "keep", "F", "F_crit", "max_rel_err_pct", "argmin_k")})
 
 
 def chi2_normal(x, alpha=0.05):
@@ -355,6 +310,7 @@ def payback(piv, k):
 
 
 mod = {"profit_m7_vs_m6_occ30": two_level(scen_piv["main"][5] / 1e6, scen_piv["occ30"][4] / 1e6),
+       "profit_anova_blocks": anova_blocks([scen_piv["main"][5].values / 1e6, scen_piv["occ30"][4].values / 1e6]),
        "T_best_vs_occ30_best_days": two_level(payback(scen_piv["main"], 5) * 365,
                                               payback(scen_piv["occ30"], 4) * 365)}
 sens = {}
@@ -379,19 +335,19 @@ print("Модифікація:", {k: {kk: round(float(vv), 5) for kk, vv in v.it
 print("Чутливість:", sens)
 
 
-def pfe22(levels_lambda=(9.8, 10.2), levels_k=(5, 6), alpha=0.05):
-    """Повний факторний експеримент 2²: x1 – інтенсивність потоку λ, x2 – кількість додаткових смуг k,
-    відгук y = ln T; Кохрен → коефіцієнти → Стьюдент (модель насичена, тож Фішер не застосовується)."""
-    piv = {lam: pd.read_csv(RES / f"series_pfe_l{lam}.csv").pivot(index="seed", columns="k",
-                                                                  values="annualProfit")
-           for lam in levels_lambda}
-    rows, cells = [], []
+def pfe22(levels_lambda=(9.8, 10.2), levels_td=(34.3, 35.7), k=5, alpha=0.05):
+    """Повний факторний експеримент 2² за кількісними факторами: x1 – інтенсивність потоку λ,
+    x2 – час зайнятості смуги tD; відгук y = ln T(k*); Кохрен → коефіцієнти → Стьюдент
+    (модель насичена, тож Фішер не застосовується)."""
+    rows, cells, extra = [], [], {}
     for i, lam in enumerate(levels_lambda):
-        for j, k in enumerate(levels_k):
-            y_ = np.log(payback(piv[lam], k).values)
+        for j, td in enumerate(levels_td):
+            piv = pd.read_csv(RES / f"series_pfe_l{lam}_t{td}.csv").pivot(index="seed", columns="k",
+                                                                         values="annualProfit")
+            cells.append(np.log(payback(piv, k).values))
             x1, x2 = 2 * i - 1, 2 * j - 1
             rows.append([1, x1, x2, x1 * x2])
-            cells.append(y_)
+            extra[f"{lam}/{td}"] = {kk: float(payback(piv, kk).mean() * 365) for kk in (3, 4, 5)}
     X = np.array(rows, float)
     N, n_ = len(cells), len(cells[0])
     ybar_ = np.array([c.mean() for c in cells])
@@ -399,22 +355,33 @@ def pfe22(levels_lambda=(9.8, 10.2), levels_k=(5, 6), alpha=0.05):
     b = X.T @ ybar_ / N
     s_b = np.sqrt(s2_rep / (N * n_))
     g, gc = cochran(cells)
-    best = {}
+    return {"lambda": list(levels_lambda), "tD": list(levels_td), "k": k, "n": n_, "cochran_G": g,
+            "cochran_crit": gc, "ybar": ybar_.tolist(), "T_days": (np.exp(ybar_) * 365).tolist(),
+            "b": b.tolist(), "s_b": float(s_b), "t": (np.abs(b) / s_b).tolist(),
+            "t_crit": float(stats.t.ppf(1 - alpha / 2, N * (n_ - 1))), "df": N * (n_ - 1),
+            "s2_rep": s2_rep, "T_by_cell": extra}
+
+
+def best_near_lambda(levels_lambda=(9.8, 10.2)):
+    """Найкраще k за потоку λ ± 2 % (серії k = 0…6) і парне порівняння з k = 5."""
+    out = {}
     for lam in levels_lambda:
-        Ts = {k: payback(piv[lam], k) * 365 for k in range(1, 7)}
-        kb = min(Ts, key=lambda k: Ts[k].mean())
+        piv = pd.read_csv(RES / f"series_pfe_l{lam}.csv").pivot(index="seed", columns="k", values="annualProfit")
+        Ts = {kk: payback(piv, kk) * 365 for kk in range(1, 7)}
+        kb = min(Ts, key=lambda kk: Ts[kk].mean())
         d = Ts[5] - Ts[kb]
-        best[str(lam)] = {"best_k": kb, "T": {k: float(Ts[k].mean()) for k in range(3, 7)},
-                          "k5_minus_best": float(d.mean()),
-                          "t": float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))) if kb != 5 else 0.0}
-    return {"lambda": list(levels_lambda), "k": list(levels_k), "n": n_, "cochran_G": g, "cochran_crit": gc,
-            "T_days": (np.exp(ybar_) * 365).tolist(), "b": b.tolist(), "s_b": float(s_b),
-            "t": (np.abs(b) / s_b).tolist(), "t_crit": float(stats.t.ppf(1 - alpha / 2, N * (n_ - 1))),
-            "df": N * (n_ - 1), "s2_rep": s2_rep, "best_by_lambda": best}
+        out[str(lam)] = {"best_k": kb, "T": {kk: float(Ts[kk].mean()) for kk in range(3, 7)},
+                         "k5_minus_best": float(d.mean()),
+                         "t": float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))) if kb != 5 else 0.0}
+    return out
 
 
 summary["pfe22"] = pfe22()
+summary["best_near_lambda"] = best_near_lambda()
+summary["main"]["T_total_profit"] = {int(kk): float((RUNWAY_COST * kk / mpiv[kk]).mean()) for kk in (2, 4, 5, 6)}
 print("ПФЕ 2²:", summary["pfe22"])
+print("λ ± 2 %:", summary["best_near_lambda"])
+print("T за повним прибутком:", summary["main"]["T_total_profit"])
 
 ver = json.loads((RES / "verification.json").read_text(encoding="utf-8"))
 summary["verification"] = ver
@@ -446,7 +413,6 @@ for p_ in pairs:
           % (p_["k"], p_["diff_mean"], p_["t"], p_["p_value"], p_["share_reps_better"]))
 print("ANOVA:", {k: v for k, v in summary["main"]["anova"].items() if k != "near"},
       summary["main"]["anova"]["near"])
-print("Kruskal:", summary["main"]["kruskal"])
 print("Cochran:", summary["main"]["cochran_steps"])
 print("ANOVA ln:", summary["main"]["anova_ln_stable"])
 print("Dist:", {k: {kk: v[kk] for kk in ("mean", "sd", "chi2", "df", "crit", "p_value", "shapiro_p", "obs")}
