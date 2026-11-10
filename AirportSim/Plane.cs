@@ -8,7 +8,6 @@ public enum PlaneState
     Diverted
 }
 
-/// <summary>Запит задачі B12 – літак з атрибутами θ, c, π і максимальним часом очікування.</summary>
 public sealed class Plane : Request
 {
     public Plane(int id, double arrivalTime, double refuelThreshold, double refuelCost,

@@ -25,14 +25,12 @@ COLORS = ["#1f4e79", "#c0504d", "#4f8a3a", "#8064a2", "#e08a1e", "#2a9d8f", "#6b
 
 
 def save(fig, name):
-    """Зберігає рисунок у теку figures/ і закриває його."""
     fig.tight_layout()
     fig.savefig(FIG / name, bbox_inches="tight")
     plt.close(fig)
 
 
 def plot_warmup(curves):
-    """Рис. 4.1: ковзні середні Велча довжини черги для кожного m (словник m → ряд ковзного середнього)."""
     fig, ax = plt.subplots(figsize=(7.2, 4.2))
     for i, m in enumerate(sorted(curves)):
         ma = curves[m]
@@ -48,7 +46,6 @@ def plot_warmup(curves):
 
 
 def plot_cumulative(cum):
-    """Рис. 4.2: накопичене середнє річного прибутку p(t) окремих прогонів для m = 7 і m = 6."""
     fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.6), sharex=True)
     for ax, m in zip(axes, (7, 6)):
         g = cum[cum.m == m]
@@ -64,7 +61,6 @@ def plot_cumulative(cum):
 
 
 def plot_hist(dist, kstar):
-    """Рис. 4.7: гістограми T_l(k*) і p_l(m*) з кривою нормального закону."""
     fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.6))
     for ax, key, xlabel in ((axes[0], "T5_days", f"Час окупності T$_l$({kstar}), діб"),
                             (axes[1], "p7_mln", f"Річний прибуток p$_l$({kstar + 2}), млн грн/рік")):
@@ -84,7 +80,6 @@ def plot_hist(dist, kstar):
 
 
 def plot_profit(mt):
-    """Рис. 4.3: річний прибуток p(m) з довірчими інтервалами."""
     fig, ax = plt.subplots(figsize=(7.0, 4.0))
     ax.errorbar(mt.m, mt.p_mean / 1e6, yerr=mt.p_ci / 1e6, fmt="o-", color=COLORS[0], capsize=3, lw=1.5)
     ax.axhline(0, color="k", lw=0.8)
@@ -95,7 +90,6 @@ def plot_profit(mt):
 
 
 def plot_payback(mt, kstar, best_T):
-    """Рис. 4.4: час окупності T(k) з довірчими інтервалами і позначенням оптимуму k*."""
     tk = mt[mt.k > 0]
     fig, ax = plt.subplots(figsize=(7.0, 4.2))
     ax.errorbar(tk.k, tk.T_mean * 365, yerr=tk.T_ci * 365, fmt="o-", color=COLORS[1], capsize=3, lw=1.5)
@@ -112,7 +106,6 @@ def plot_payback(mt, kstar, best_T):
 
 
 def plot_service(ind):
-    """Рис. 4.5: частки літаків за типом обслуговування, довжина черги і завантаження смуги від m."""
     fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.6))
     ax = axes[0]
     ax.plot(ind.m, ind.shareDiverted * 100, "o-", color=COLORS[1], label="відлетіли в інший аеропорт")
@@ -137,7 +130,6 @@ def plot_service(ind):
 
 
 def plot_boxplot(Tmat):
-    """Рис. 4.6: діаграми розмаху часу окупності в реплікаціях для k = 3…7."""
     fig, ax = plt.subplots(figsize=(6.6, 3.8))
     data = [Tmat[k].values * 365 for k in (3, 4, 5, 6, 7)]
     ax.boxplot(data, tick_labels=["3", "4", "5", "6", "7"], widths=0.5)
@@ -147,7 +139,6 @@ def plot_boxplot(Tmat):
 
 
 def plot_sensitivity(scen_tables):
-    """Рис. 5.1: T(k) для сценаріїв (словник тег → (таблиця окупності для k > 0, k*))."""
     labels = {"lambda8": "λ = 8 літаків/год", "main": "λ = 10 літаків/год (умова)",
               "lambda12": "λ = 12 літаків/год", "occ30": "λ = 10, зайнятість смуги 30 хв"}
     styles = {"lambda8": ("s--", COLORS[2]), "main": ("o-", COLORS[1]), "lambda12": ("^--", COLORS[3]),
@@ -164,7 +155,6 @@ def plot_sensitivity(scen_tables):
 
 
 def plot_verification(ver):
-    """Рис. 3.4: порівняння імітації з формулами Ерланга C (M/M/m) та Ерланга A (M/M/m+M)."""
     fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.5))
     v1 = ver["mmm_erlangC"]
     ax = axes[0]

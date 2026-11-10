@@ -57,15 +57,13 @@ summary = {}
 
 welch = pd.read_csv(RES / "transient_welch.csv", usecols=["m", "seed", "checkpoint", "queueNow"])
 welch6 = pd.read_csv(RES / "transient_welch6.csv", usecols=["m", "seed", "checkpoint", "queueNow"])
-WIN = 10                      # півширина вікна ковзного середнього, точок по 50 хв (вікно 1050 хв)
+WIN = 10
 
 
 def welch_end(e, steady_from):
-    """Метод Велча: усереднення за прогонами, ковзне середнє; кінець перехідного періоду —
-    перший момент, коли ковзне середнє входить у смугу steady ± max(5 %, 2σ шуму усередненої кривої)."""
     v = e.values
     sm = np.empty_like(v, dtype=float)
-    for i in range(len(v)):             # ковзне середнє Велча: на початку вікно 2i − 1, далі 2w + 1
+    for i in range(len(v)):
         h = min(i, WIN, len(v) - 1 - i)
         sm[i] = v[i - h:i + h + 1].mean()
     ma = pd.Series(sm, index=e.index)
@@ -216,8 +214,6 @@ summary["main"]["anova_ln_stable"] = anova(lnT)
 
 
 def anova_blocks(arrs):
-    """Двофакторний дисперсійний аналіз без повторень: фактор – рівень k, блок – реплікація
-    (загальні випадкові числа роблять значення однієї реплікації залежними)."""
     Y_ = np.array(arrs)
     q_, n_ = Y_.shape
     g = Y_.mean()
@@ -235,7 +231,6 @@ summary["main"]["anova_blocks_ln_stable"] = anova_blocks(lnT)
 
 
 def chi2_normal(x, alpha=0.05):
-    """Критерій χ² Пірсона: рівні інтервали за Стерджесом, об’єднання інтервалів з очікуваною частотою < 5."""
     x = np.asarray(x, float)
     n_ = len(x)
     kb = int(round(1 + 3.322 * np.log10(n_)))
@@ -287,7 +282,6 @@ for tag in ("lambda8", "main", "lambda12", "occ30"):
 plots.plot_sensitivity(scen_tables)
 summary["scenarios"] = scen
 
-# ---- модифікація моделі: дисперсійний аналіз, фактор – модель (початкова / модифікована)
 scen_piv = {tag: pd.read_csv(RES / f"series_{tag}.csv").pivot(index="seed", columns="k",
                                                                values="annualProfit")
             for tag in ("lambda8", "main", "lambda12", "occ30")}
@@ -336,9 +330,6 @@ print("Чутливість:", sens)
 
 
 def pfe22(levels_lambda=(9.8, 10.2), levels_td=(34.3, 35.7), k=5, alpha=0.05):
-    """Повний факторний експеримент 2² за кількісними факторами: x1 – інтенсивність потоку λ,
-    x2 – час зайнятості смуги tD; відгук y = ln T(k*); Кохрен → коефіцієнти → Стьюдент
-    (модель насичена, тож Фішер не застосовується)."""
     rows, cells, extra = [], [], {}
     for i, lam in enumerate(levels_lambda):
         for j, td in enumerate(levels_td):
@@ -363,7 +354,6 @@ def pfe22(levels_lambda=(9.8, 10.2), levels_td=(34.3, 35.7), k=5, alpha=0.05):
 
 
 def best_near_lambda(levels_lambda=(9.8, 10.2)):
-    """Найкраще k за потоку λ ± 2 % (серії k = 0…6) і парне порівняння з k = 5."""
     out = {}
     for lam in levels_lambda:
         piv = pd.read_csv(RES / f"series_pfe_l{lam}.csv").pivot(index="seed", columns="k", values="annualProfit")

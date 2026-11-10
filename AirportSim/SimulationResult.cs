@@ -1,6 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Вихідні характеристики одного прогону (формули підрозділу 2.3).</summary>
 public sealed record SimulationResult
 {
     public int Runways { get; init; }
@@ -47,8 +46,6 @@ public sealed record SimulationResult
     public double ShareEnqueued => Arrivals == 0 ? 0 : (double)Enqueued / Arrivals;
     public double MeanWaitPerArrival => Arrivals == 0 ? 0 : MeanTimeInQueue * QueueExitRate * Period / Arrivals;
 
-    /// <summary>Середнє очікування за всіма літаками, що пройшли через вузол «черга – смуги»
-    /// (сіли без очікування, сіли після очікування, відійшли): Σw / (N0 + Nw + Nd).</summary>
     public double MeanWaitAll => LandedNoWait + QueueExits == 0 ? 0 : WaitSumAll / (LandedNoWait + QueueExits);
 
     public static SimulationResult From(Model model, double tmod)

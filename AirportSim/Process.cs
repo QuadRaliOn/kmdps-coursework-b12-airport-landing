@@ -1,10 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Універсальна багатоканальна СМО мережі МО: m однакових пристроїв і черга.
-/// Подія елемента – вихід запиту з каналу; при надходженні запит займає вільний канал, стає в чергу
-/// або, якщо черга заповнена, отримує відмову.
-/// Специфіка задачі задається параметрами (кількість каналів, генератор часу обслуговування, черга)
-/// і підписками на подію ChannelOccupied.</summary>
 public sealed class Process : Element
 {
     private readonly double[] channelTnext;
@@ -22,7 +17,6 @@ public sealed class Process : Element
     public Queue Queue { get; }
     public Element? Next { get; set; }
 
-    /// <summary>Канал зайнято запитом (у момент надходження або виходу іншого запиту з каналу); ознака «чекав у черзі».</summary>
     public event Action<Request, bool>? ChannelOccupied;
 
     public int Channels => channelTnext.Length;
@@ -41,7 +35,7 @@ public sealed class Process : Element
         }
         else if (Queue.IsFull)
         {
-            Failures++;                                  // відмова: черга заповнена
+            Failures++;
             Log?.Event(Tcurr, "відмова: черга заповнена", request);
         }
         else

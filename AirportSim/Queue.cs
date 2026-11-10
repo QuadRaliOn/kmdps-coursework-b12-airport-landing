@@ -19,9 +19,6 @@ public sealed class QueueStatistics
     }
 }
 
-/// <summary>Черга мережі МО з дисципліною FIFO і максимальною довжиною MaxLength (за її досягнення
-/// СМО відмовляє новому запиту). Власних подій не має: запит виходить з неї лише тоді,
-/// коли канал СМО звільнився (метод TakeFirst). Quantity – кількість запитів, що вийшли з черги.</summary>
 public class Queue : Element
 {
     protected readonly LinkedList<Request> Items = new();

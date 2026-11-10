@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace AirportSim;
 
-/// <summary>Протокол подій: стан мережі після кожної зміни стану елемента.</summary>
 public sealed class EventLog
 {
     private readonly TextWriter writer;

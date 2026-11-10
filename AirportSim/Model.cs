@@ -1,6 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Мережа МО задачі B12 і алгоритм імітації з просуванням часу до найближчої події.</summary>
 public sealed class Model
 {
     private readonly List<Element> elements;
@@ -22,7 +21,6 @@ public sealed class Model
         Runways.Next = Landed;
         Queue.TimeoutExit = OtherAirport;
 
-        // порядок у списку задає пріоритет одночасних змін стану: вихід з каналу, черга, надходження
         elements = new List<Element> { Runways, Queue, Source, Landed, OtherAirport };
         log?.Attach(this);
         foreach (Element e in elements) e.Log = log;

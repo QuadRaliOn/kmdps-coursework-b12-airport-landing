@@ -1,6 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Запит мережі МО: момент надходження, момент постановки в чергу, номер.</summary>
 public class Request
 {
     public Request(int id, double arrivalTime)

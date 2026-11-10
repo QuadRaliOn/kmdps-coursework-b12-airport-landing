@@ -1,6 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Елемент мережі МО: поточний час, момент найближчої зміни стану, правила входу і виходу запиту.</summary>
 public abstract class Element
 {
     protected Element(string name) => Name = name;

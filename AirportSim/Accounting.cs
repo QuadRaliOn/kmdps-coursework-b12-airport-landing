@@ -1,7 +1,5 @@
 namespace AirportSim;
 
-/// <summary>Економічні показники аеропорту: дохід від посадок за типом запиту і витрати на дозаправку.
-/// Підписується на події елементів мережі, тож код СМО і черги не містить економіки задачі.</summary>
 public sealed class Accounting
 {
     private readonly ModelParameters p;
@@ -23,12 +21,12 @@ public sealed class Accounting
         if (waited)
         {
             plane.State = PlaneState.LandedAfterWait;
-            Income += plane.ProfitAfterWait;          // тип запиту 2
+            Income += plane.ProfitAfterWait;
         }
         else
         {
             plane.State = PlaneState.LandedNoWait;
-            Income += p.ProfitNoWait;                 // тип запиту 1
+            Income += p.ProfitNoWait;
         }
     }
 
